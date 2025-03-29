@@ -4,6 +4,7 @@ using JMayer.Data.HTTP.DataLayer;
 using JMayer.Web.Mvc.Controller;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.Base;
+using System.Text.Json;
 
 namespace JMayer.Example.ASPMVC.Controllers;
 
@@ -72,11 +73,11 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         {
             if (model.KeyColumn == nameof(DataObject.Integer64ID))
             {
-                await DataLayer.DeleteAsync(obj => obj.Integer64ID == (long)model.Key);
+                await DataLayer.DeleteAsync(obj => obj.Integer64ID == Convert.ToInt64(model.Key.ToString()));
             }
             else if (model.KeyColumn == nameof(DataObject.StringID))
             {
-                await DataLayer.DeleteAsync(obj => obj.StringID == (string)model.Key);
+                await DataLayer.DeleteAsync(obj => obj.StringID == model.Key.ToString());
             }
 
             return Json(model);
