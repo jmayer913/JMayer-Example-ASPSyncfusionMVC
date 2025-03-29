@@ -1,0 +1,73 @@
+﻿@model List<WorkOrder>
+
+@{
+    ViewData["Title"] = "Work Orders";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Work Orders</h1>
+</div>
+
+<div>
+    <ejs-grid id="work-order-grid" tvalue="@typeof(WorkOrder)" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
+              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure">
+        <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete"></e-data-manager>
+        <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" />
+        <e-grid-columns>
+            <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="ID" isIdentity="true" isPrimaryKey="true" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" />
+            <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
+        </e-grid-columns>
+        <e-grid-pagesettings pageCount="5"></e-grid-pagesettings>
+    </ejs-grid>
+    <ejs-dialog id='work-order-message-dialog' content="" header="" height="150px" isModal="true" showCloseIcon="true" visible="false" width="500px" overlayClick="onOverlayClick" />
+</div>
+
+<script>
+    //The function allows you to customize the add/edit dialog.
+     function onActionComplete(args) {
+         if ((args.requestType === 'beginEdit' || args.requestType === 'add')) {
+             var dialog = args.dialog;
+             //Update the title based on the action.
+             dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
+         }
+     }
+
+     //The function handles any failures.
+     async function onActionFailure(args) {
+         var dialog = document.getElementById("work-order-message-dialog").ej2_instances[0];
+
+         if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
+             const response = args.error[0].error
+
+             //Check for 400 (Bad Request), 409 (Conflict) & 500 (Internal Server Error) because those will return json.
+             if (response.status === 400 || response.status === 409 || response.status === 500) {
+                const responseBody = await response.json();
+
+                //The server returned 400 (Bad Request) with validation problem details.
+                if (response.status === 400 && responseBody.errors !== undefined) {
+                    //Idea I would like to the Grid's add/edit popup to display validation issues.
+                    //I also need to handle if a ServerSideValidation or ValidationProblemDetails object is returned.
+                }
+                //The server responded with 409. Display the conflict message in a popup.
+                else if (response.status === 409 && responseBody.ConflictMessage !== undefined) {
+                    dialog.header = "Warning";
+                    dialog.content = responseBody.ConflictMessage[0];
+                    dialog.show();
+                }
+                //The server returned 500 (Internal Server Error) with problem details. Display the details in a popup.
+                else if (response.status === 500 && responseBody.detail !== undefined) {
+                    dialog.header = "Error";
+                    dialog.content = responseBody.detail;
+                    dialog.show();
+                }
+             }
+         }
+     }
+
+     //The function closes the dialog when the overlay is clicked.
+     function onOverlayClick() {
+         var dialog = document.getElementById("work-order-message-dialog").ej2_instances[0];
+         dialog.hide();
+     }
+</script>
