@@ -2,6 +2,45 @@
 
 @{
     ViewData["Title"] = "Work Orders";
+
+    //Setup the dropdown for the service types.
+    var priorityDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
+    {
+        AllowFiltering = false,
+        DataSource = ViewBag.Priorities,
+        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
+        {
+            Value = "Value",
+            Text = "Text"
+        },
+        Query = "new ej.data.Query()",
+    };
+
+    //Setup the dropdown for the service types.
+    var serviceTypeDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
+    {
+        AllowFiltering = false,
+        DataSource = ViewBag.ServiceTypes,
+        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
+        {
+            Value = "Value",
+            Text = "Text"
+        },
+        Query = "new ej.data.Query()",
+    };
+
+    //Setup the dropdown for the statuses.
+    var statusDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
+    {
+        AllowFiltering = false,
+        DataSource = ViewBag.Statuses,
+        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
+        {
+            Value = "Value",
+            Text = "Text"
+        },
+        Query = "new ej.data.Query()",    
+    };
 }
 
 <div class="text-center">
@@ -10,32 +49,59 @@
 
 <div>
     <ejs-grid id="work-order-grid" tvalue="@typeof(WorkOrder)" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
-              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure">
-        <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete"></e-data-manager>
+              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionBegin="onActionBegin" actionComplete="onActionComplete" actionFailure="onActionFailure">
+        <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" />
         <e-grid-columns>
             <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="ID" isIdentity="true" isPrimaryKey="true" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" />
-            <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
+            <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Problem" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.ServiceType)" edit="@new { @params = serviceTypeDropdownList }" editType="dropdownedit" headerText="Service Type" />
+            <e-grid-column field="@nameof(WorkOrder.Priority)" edit="@new { @params = priorityDropdownList }" editType="dropdownedit" headerText="Priority" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" edit="@new { @params = statusDropdownList }" editType="dropdownedit" headerText="Status" />
         </e-grid-columns>
-        <e-grid-pagesettings pageCount="5"></e-grid-pagesettings>
+        <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
     <ejs-dialog id='work-order-message-dialog' content="" header="" height="150px" isModal="true" showCloseIcon="true" visible="false" width="500px" overlayClick="onOverlayClick" />
 </div>
 
 <script>
-    //The function allows you to customize the add/edit dialog.
+    const resolutionColumnName = 'Resolution';
+    const descriptionColumnName = 'Description';
+
+    //The function 
+    function onActionBegin(args) {
+        //The hidden columns need to become visible inorder for them to be displayed in the add/edit dialog.
+        if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+            for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
+                if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === resolutionColumnName) {
+                    this.columns[columnIndex].visible = true;
+                }
+            }
+         }
+    }
+
+    //The function 
      function onActionComplete(args) {
-         if ((args.requestType === 'beginEdit' || args.requestType === 'add')) {
-             var dialog = args.dialog;
-             //Update the title based on the action.
-             dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
+         //Update the dialog's header based on the action.
+         if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+            var dialog = args.dialog;
+            dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
+         }
+         //Rehide the columns meant to be hidden when a save action completes.
+         else if (args.requestType === 'save') {
+             for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
+                 if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === resolutionColumnName) {
+                     this.columns[columnIndex].visible = false;
+                 }
+             }
          }
      }
 
      //The function handles any failures.
      async function onActionFailure(args) {
-         var dialog = document.getElementById("work-order-message-dialog").ej2_instances[0];
+         var dialog = document.getElementById('work-order-message-dialog').ej2_instances[0];
 
          if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
              const response = args.error[0].error
@@ -51,13 +117,13 @@
                 }
                 //The server responded with 409. Display the conflict message in a popup.
                 else if (response.status === 409 && responseBody.ConflictMessage !== undefined) {
-                    dialog.header = "Warning";
+                    dialog.header = 'Warning';
                     dialog.content = responseBody.ConflictMessage[0];
                     dialog.show();
                 }
                 //The server returned 500 (Internal Server Error) with problem details. Display the details in a popup.
                 else if (response.status === 500 && responseBody.detail !== undefined) {
-                    dialog.header = "Error";
+                    dialog.header = 'Error';
                     dialog.content = responseBody.detail;
                     dialog.show();
                 }
@@ -67,7 +133,7 @@
 
      //The function closes the dialog when the overlay is clicked.
      function onOverlayClick() {
-         var dialog = document.getElementById("work-order-message-dialog").ej2_instances[0];
+         var dialog = document.getElementById('work-order-message-dialog').ej2_instances[0];
          dialog.hide();
      }
 </script>

@@ -4,7 +4,6 @@ using JMayer.Data.HTTP.DataLayer;
 using JMayer.Web.Mvc.Controller;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.Base;
-using System.Text.Json;
 
 namespace JMayer.Example.ASPMVC.Controllers;
 
