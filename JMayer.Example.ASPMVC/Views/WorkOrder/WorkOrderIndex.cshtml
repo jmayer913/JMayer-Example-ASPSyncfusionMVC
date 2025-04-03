@@ -64,7 +64,6 @@
         </e-grid-columns>
         <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
-    <ejs-dialog id='work-order-message-dialog' content="" header="" height="150px" isModal="true" showCloseIcon="true" visible="false" width="500px" overlayClick="onOverlayClick" />
 </div>
 
 <script>
@@ -104,8 +103,6 @@
 
      //The function handles any failures.
      async function onActionFailure(args) {
-         var dialog = document.getElementById('work-order-message-dialog').ej2_instances[0];
-
          if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
              const response = args.error[0].error
 
@@ -120,24 +117,22 @@
                 }
                 //The server responded with 409. Display the conflict message in a popup.
                 else if (response.status === 409 && responseBody.ConflictMessage !== undefined) {
-                    dialog.header = 'Warning';
-                    dialog.content = responseBody.ConflictMessage[0];
-                    dialog.show();
+                    ej.popups.DialogUtility.alert({
+                        title: 'Warning',
+                        content: responseBody.ConflictMessage[0],
+                        position: { X: 'center', Y: 'center' }
+                    });
                 }
                 //The server returned 500 (Internal Server Error) with problem details. Display the details in a popup.
                 else if (response.status === 500 && responseBody.detail !== undefined) {
-                    dialog.header = 'Error';
-                    dialog.content = responseBody.detail;
-                    dialog.show();
+                    ej.popups.DialogUtility.alert({
+                        title: 'Error',
+                        content: responseBody.detail,
+                        position: { X: 'center', Y: 'center' }
+                    });
                 }
              }
          }
-     }
-
-     //The function closes the dialog when the overlay is clicked.
-     function onOverlayClick() {
-         var dialog = document.getElementById('work-order-message-dialog').ej2_instances[0];
-         dialog.hide();
      }
 </script>
 
