@@ -23,7 +23,12 @@ public class WorkOrder : UserEditableDataObject
     /// </summary>
     [Required]
     [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-    public WorkOrderPriority Priority { get; set; }
+    public WorkOrderPriority Priority { get; set; } = WorkOrderPriority.Normal;
+
+    /// <summary>
+    /// The property gets/sets the problem found.
+    /// </summary>
+    public string Problem { get; set; } = string.Empty;
 
     /// <summary>
     /// The property gets/sets the resolution to the work order.
@@ -54,6 +59,7 @@ public class WorkOrder : UserEditableDataObject
             DoneBy = workOrder.DoneBy;
             OtherTypeOfService = workOrder.OtherTypeOfService;
             Priority = workOrder.Priority;
+            Problem = workOrder.Problem;
             Resolution = workOrder.Resolution;
             ServiceType = workOrder.ServiceType;
             Status = workOrder.Status;

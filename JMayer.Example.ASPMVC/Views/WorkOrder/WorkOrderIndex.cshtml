@@ -55,7 +55,8 @@
         <e-grid-columns>
             <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="ID" isIdentity="true" isPrimaryKey="true" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" />
-            <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Problem" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
+            <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.ServiceType)" edit="@new { @params = serviceTypeDropdownList }" editType="dropdownedit" headerText="Service Type" />
             <e-grid-column field="@nameof(WorkOrder.Priority)" edit="@new { @params = priorityDropdownList }" editType="dropdownedit" headerText="Priority" />
@@ -67,15 +68,17 @@
 </div>
 
 <script>
-    const resolutionColumnName = 'Resolution';
     const descriptionColumnName = 'Description';
+    const problemColumnName = 'Problem';
+    const resolutionColumnName = 'Resolution';
+    
 
     //The function 
     function onActionBegin(args) {
         //The hidden columns need to become visible inorder for them to be displayed in the add/edit dialog.
         if (args.requestType === 'beginEdit' || args.requestType === 'add') {
             for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
-                if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === resolutionColumnName) {
+                if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === problemColumnName || this.columns[columnIndex].field === resolutionColumnName) {
                     this.columns[columnIndex].visible = true;
                 }
             }
@@ -92,7 +95,7 @@
          //Rehide the columns meant to be hidden when a save action completes.
          else if (args.requestType === 'save') {
              for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
-                 if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === resolutionColumnName) {
+                 if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === problemColumnName || this.columns[columnIndex].field === resolutionColumnName) {
                      this.columns[columnIndex].visible = false;
                  }
              }
@@ -136,4 +139,8 @@
          var dialog = document.getElementById('work-order-message-dialog').ej2_instances[0];
          dialog.hide();
      }
+</script>
+
+<script id="serviceTypeTemplate" type="text/x-template">
+    
 </script>
