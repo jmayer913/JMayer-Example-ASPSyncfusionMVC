@@ -22,7 +22,6 @@ public class WorkOrder : UserEditableDataObject
     /// The property gets/sets the priority of the work order.
     /// </summary>
     [Required]
-    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public WorkOrderPriority Priority { get; set; } = WorkOrderPriority.Normal;
 
     /// <summary>
@@ -39,14 +38,12 @@ public class WorkOrder : UserEditableDataObject
     /// The property gets/sets the type of service to be done.
     /// </summary>
     [Required]
-    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public WorkOrderServiceType ServiceType { get; set; }
 
     /// <summary>
     /// The property get/sets the status of the work order.
     /// </summary>
     [Required]
-    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public WorkOrderStatus Status { get; set; }
 
     /// <inheritdoc/>

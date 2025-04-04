@@ -58,9 +58,9 @@
             <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
-            <e-grid-column field="@nameof(WorkOrder.ServiceType)" edit="@new { @params = serviceTypeDropdownList }" editType="dropdownedit" headerText="Service Type" />
-            <e-grid-column field="@nameof(WorkOrder.Priority)" edit="@new { @params = priorityDropdownList }" editType="dropdownedit" headerText="Priority" />
-            <e-grid-column field="@nameof(WorkOrder.Status)" edit="@new { @params = statusDropdownList }" editType="dropdownedit" headerText="Status" />
+            <e-grid-column field="@nameof(WorkOrder.ServiceType)" edit="@new { @params = serviceTypeDropdownList }" editType="dropdownedit" headerText="Service Type" template="#service-type-template" />
+            <e-grid-column field="@nameof(WorkOrder.Priority)" edit="@new { @params = priorityDropdownList }" editType="dropdownedit" headerText="Priority" template="#priority-template" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" edit="@new { @params = statusDropdownList }" editType="dropdownedit" headerText="Status" template="#status-template" />
         </e-grid-columns>
         <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
@@ -136,6 +136,44 @@
      }
 </script>
 
-<script id="serviceTypeTemplate" type="text/x-template">
-    
+<script id="priority-template" type="text/x-template">
+    ${if(Priority == 0)}
+        Low
+    ${/if}
+    ${if(Priority == 1)}
+        Normal
+    ${/if}
+    ${if(Priority == 2)}
+        High
+    ${/if}
+</script>
+
+<script id="service-type-template" type="text/x-template">
+    ${if(ServiceType == 0)}
+        Inspection
+    ${/if}
+    ${if(ServiceType == 1)}
+        Routine
+    ${/if}
+    ${if(ServiceType == 2)}
+        Reactive
+    ${/if}
+    ${if(ServiceType == 3)}
+        Other
+    ${/if}
+</script>
+
+<script id="status-template" type="text/x-template">
+    ${if(Status == 0)}
+        Open
+    ${/if}
+    ${if(Status == 1)}
+        In Progress
+    ${/if}
+    ${if(Status == 2)}
+        Verify
+    ${/if}
+    ${if(Status == 3)}
+        Closed
+    ${/if}
 </script>
