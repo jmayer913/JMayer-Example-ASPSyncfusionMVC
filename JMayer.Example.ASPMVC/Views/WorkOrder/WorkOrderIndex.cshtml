@@ -1,46 +1,17 @@
 ﻿@model List<WorkOrder>
 
 @{
+    //Issues:
+
+    //The ejs is throwing a javascript error when validation occurs.
+    //I've found out it works correctly when column validation is used
+    //but when you turn on data annotation validation, it throws the javascript
+    //error.
+
+    //When I create a new record, the record is added to the Grid but the columns
+    //with templates do not show correctly. I need to refresh the browser.
+
     ViewData["Title"] = "Work Orders";
-
-    //Setup the dropdown for the service types.
-    var priorityDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
-    {
-        AllowFiltering = false,
-        DataSource = ViewBag.Priorities,
-        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
-        {
-            Value = "Value",
-            Text = "Text"
-        },
-        Query = "new ej.data.Query()",
-    };
-
-    //Setup the dropdown for the service types.
-    var serviceTypeDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
-    {
-        AllowFiltering = false,
-        DataSource = ViewBag.ServiceTypes,
-        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
-        {
-            Value = "Value",
-            Text = "Text"
-        },
-        Query = "new ej.data.Query()",
-    };
-
-    //Setup the dropdown for the statuses.
-    var statusDropdownList = new Syncfusion.EJ2.DropDowns.DropDownList()
-    {
-        AllowFiltering = false,
-        DataSource = ViewBag.Statuses,
-        Fields = new Syncfusion.EJ2.DropDowns.DropDownListFieldSettings()
-        {
-            Value = "Value",
-            Text = "Text"
-        },
-        Query = "new ej.data.Query()",    
-    };
 }
 
 <div class="text-center">
@@ -48,62 +19,113 @@
 </div>
 
 <div>
-    <ejs-grid id="work-order-grid" tvalue="@typeof(WorkOrder)" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
-              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionBegin="onActionBegin" actionComplete="onActionComplete" actionFailure="onActionFailure">
+    <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
+              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
-        <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" />
+        <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
         <e-grid-columns>
-            <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="ID" isIdentity="true" isPrimaryKey="true" visible="false" />
-            <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" />
+            <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="Work Order ID" isPrimaryKey="true" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
+            <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" template="#service-type-column-template" validationRules="@(new { required = true })" />
+            <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" template="#priority-column-template" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
+            <e-grid-column field="@nameof(WorkOrder.DoneBy)" headerText="Done By" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
-            <e-grid-column field="@nameof(WorkOrder.ServiceType)" edit="@new { @params = serviceTypeDropdownList }" editType="dropdownedit" headerText="Service Type" template="#service-type-template" />
-            <e-grid-column field="@nameof(WorkOrder.Priority)" edit="@new { @params = priorityDropdownList }" editType="dropdownedit" headerText="Priority" template="#priority-template" />
-            <e-grid-column field="@nameof(WorkOrder.Status)" edit="@new { @params = statusDropdownList }" editType="dropdownedit" headerText="Status" template="#status-template" />
         </e-grid-columns>
         <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
 </div>
 
-<script>
-    const descriptionColumnName = 'Description';
-    const problemColumnName = 'Problem';
-    const resolutionColumnName = 'Resolution';
-    
+<script id='work-order-dialog-template' type="text/x-template">
+    <div id="work-order-dialog-template-root"></div>
+</script>
 
-    //The function 
-    function onActionBegin(args) {
-        //The hidden columns need to become visible inorder for them to be displayed in the add/edit dialog.
+<script id="priority-column-template" type="text/x-template">
+    ${if(Priority == 0)}
+        Low
+    ${/if}
+    ${if(Priority == 1)}
+        Normal
+    ${/if}
+    ${if(Priority == 2)}
+        High
+    ${/if}
+</script>
+
+<script id="service-type-column-template" type="text/x-template">
+    ${if(ServiceType == 0)}
+        Inspection
+    ${/if}
+    ${if(ServiceType == 1)}
+        Routine
+    ${/if}
+    ${if(ServiceType == 2)}
+        Reactive
+    ${/if}
+    ${if(ServiceType == 3)}
+        Other
+    ${/if}
+</script>
+
+<script id="status-column-template" type="text/x-template">
+    ${if(Status == 0)}
+        Open
+    ${/if}
+    ${if(Status == 1)}
+        In Progress
+    ${/if}
+    ${if(Status == 2)}
+        Verify
+    ${/if}
+    ${if(Status == 3)}
+        Closed
+    ${/if}
+</script>
+
+<script>
+    //The function handles loading the add/edit dialog.
+    function onActionComplete(args) {
         if (args.requestType === 'beginEdit' || args.requestType === 'add') {
-            for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
-                if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === problemColumnName || this.columns[columnIndex].field === resolutionColumnName) {
-                    this.columns[columnIndex].visible = true;
-                }
+            var dialog = args.dialog;
+            
+            //Update the dialog's header based on the action.
+            dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
+
+            //Request the add partial view and load it into the template.
+            if (args.requestType === 'add') {
+                var ajax = new ej.base.Ajax({
+                    type: 'GET',
+                    url: '/WorkOrder/GetAddPartial',
+                    contentType: 'application/json',
+                    dataType: 'json'
+                });
+                ajax.send()
+                .then(function (data) {
+
+                    //It visually looks correct using jquery's .html()
+                    //but when using vanilla .innerHTML, it looks terrible.
+                    $('#work-order-dialog-template-root').html(data);
+                    //appendElement(data, args.form);
+                    
+                    args.form.elements.namedItem('Name').focus();
+                })
+                .catch(function (xhr) {
+                    //TO DO: Display an error popup.
+                    console.log(xhr);
+                });
             }
-         }
+            //Request the edit partial view and load it into the template.
+            else if (args.requestType === 'beginEdit') {
+
+            }
+        }
     }
 
-    //The function 
-     function onActionComplete(args) {
-         //Update the dialog's header based on the action.
-         if (args.requestType === 'beginEdit' || args.requestType === 'add') {
-            var dialog = args.dialog;
-            dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
-         }
-         //Rehide the columns meant to be hidden when a save action completes.
-         else if (args.requestType === 'save') {
-             for (var columnIndex = 0; columnIndex < this.columns.length; columnIndex++) {
-                 if (this.columns[columnIndex].field === descriptionColumnName || this.columns[columnIndex].field === problemColumnName || this.columns[columnIndex].field === resolutionColumnName) {
-                     this.columns[columnIndex].visible = false;
-                 }
-             }
-         }
-     }
-
-     //The function handles any failures.
-     async function onActionFailure(args) {
-         if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
+    //The function handles any failures.
+    async function onActionFailure(args) {
+        if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
              const response = args.error[0].error
 
              //Check for 400 (Bad Request), 409 (Conflict) & 500 (Internal Server Error) because those will return json.
@@ -112,7 +134,7 @@
 
                 //The server returned 400 (Bad Request) with validation problem details.
                 if (response.status === 400 && responseBody.errors !== undefined) {
-                    //Idea I would like to the Grid's add/edit popup to display validation issues.
+                    //Ideally I would like to the Grid's add/edit popup to display validation issues.
                     //I also need to handle if a ServerSideValidation or ValidationProblemDetails object is returned.
                 }
                 //The server responded with 409. Display the conflict message in a popup.
@@ -132,48 +154,26 @@
                     });
                 }
              }
-         }
-     }
-</script>
+        }
+    }
 
-<script id="priority-template" type="text/x-template">
-    ${if(Priority == 0)}
-        Low
-    ${/if}
-    ${if(Priority == 1)}
-        Normal
-    ${/if}
-    ${if(Priority == 2)}
-        High
-    ${/if}
-</script>
+    function appendElement(elementString, form) {
+        //Add HTML to the div in the dialog template.
+        form.querySelector('#work-order-dialog-template-root').innerHTML = elementString;
 
-<script id="service-type-template" type="text/x-template">
-    ${if(ServiceType == 0)}
-        Inspection
-    ${/if}
-    ${if(ServiceType == 1)}
-        Routine
-    ${/if}
-    ${if(ServiceType == 2)}
-        Reactive
-    ${/if}
-    ${if(ServiceType == 3)}
-        Other
-    ${/if}
-</script>
+        //The next part takes the script generated for the template and moves it into the document's head.
+        //I don't know why the syncfusion is doing this.
+        
+        // //Create a script tag on the document.
+        // var script = document.createElement('script');
+        // script.type = "text/javascript";
 
-<script id="status-template" type="text/x-template">
-    ${if(Status == 0)}
-        Open
-    ${/if}
-    ${if(Status == 1)}
-        In Progress
-    ${/if}
-    ${if(Status == 2)}
-        Verify
-    ${/if}
-    ${if(Status == 3)}
-        Closed
-    ${/if}
+        // //Find the script tag in the dialog template.
+        // var serverScript = form.querySelector('#work-order-dialog-template-root').querySelector('script');
+
+        // //Add the dialog template's script to the document head and then, remove the dialog template's script.
+        // script.textContent = serverScript.innerHTML;
+        // document.head.appendChild(script);
+        // serverScript.remove();
+    }
 </script>

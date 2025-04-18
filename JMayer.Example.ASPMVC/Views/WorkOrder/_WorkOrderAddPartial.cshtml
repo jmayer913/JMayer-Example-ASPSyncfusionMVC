@@ -1,0 +1,20 @@
+﻿@model WorkOrder
+
+<div>
+    <div class="row">
+        <div class="col-md-6">
+            <ejs-textbox id="@nameof(WorkOrder.Name)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Name)" showClearButton="true"></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" floatLabelType="Always" placeholder="Service Type" showClearButton="true">
+                <e-dropdownlist-fields text="Text" value="Value"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true"></ejs-textarea>
+        </div>
+    </div>
+</div>
+<ejs-scripts></ejs-scripts>

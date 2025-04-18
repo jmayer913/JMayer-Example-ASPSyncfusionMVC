@@ -27,6 +27,19 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     }
 
     /// <summary>
+    /// The method returns the add partial view.
+    /// </summary>
+    /// <returns>The partial view.</returns>
+    public override async Task<IActionResult> GetAddPartialAsync()
+    {
+        //The index view uses Model instead of ViewData so I'm not sure how that will work.
+        //I'm also not sure why the partial view needs all the records.
+        //ViewData["DataSource"] = DataLayer.GetAllAsync();
+
+        return await base.GetAddPartialAsync();
+    }
+
+    /// <summary>
     /// The method creates a data object using the data layer.
     /// </summary>
     /// <param name="model">The model.</param>
@@ -111,7 +124,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             }
             else
             {
-                Logger.LogWarning("Failed to update the {Key} {Type} because of a model validation error.", model.Key.ToString(), DataObjectTypeName);
+                Logger.LogWarning("Failed to update the {Key} {Type} because of a model validation error.", model?.Key?.ToString() ?? string.Empty, DataObjectTypeName);
                 return ValidationProblem(ModelState);
             }
         }
