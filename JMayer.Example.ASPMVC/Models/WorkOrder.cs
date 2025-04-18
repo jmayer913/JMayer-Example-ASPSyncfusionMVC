@@ -11,7 +11,7 @@ public class WorkOrder : UserEditableDataObject
     /// <summary>
     /// The property gets/sets when the work order is expected to done by.
     /// </summary>
-    public DateTime? DoneBy { get; set; }
+    public DateTime? DueBy { get; set; }
 
     /// <summary>
     /// The property gets/sets the user defined type of service when Other is selected for the service.
@@ -53,7 +53,7 @@ public class WorkOrder : UserEditableDataObject
 
         if (dataObject is WorkOrder workOrder)
         {
-            DoneBy = workOrder.DoneBy;
+            DueBy = workOrder.DueBy;
             OtherTypeOfService = workOrder.OtherTypeOfService;
             Priority = workOrder.Priority;
             Problem = workOrder.Problem;

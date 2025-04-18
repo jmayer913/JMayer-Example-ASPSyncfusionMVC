@@ -11,6 +11,9 @@
     //When I create a new record, the record is added to the Grid but the columns
     //with templates do not show correctly. I need to refresh the browser.
 
+    //Using innerHTML when adding the partial view to the template looks terrible
+    //but it looks good when JQuery().html() is used.
+
     ViewData["Title"] = "Work Orders";
 }
 
@@ -20,7 +23,7 @@
 
 <div>
     <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
-              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure">
+              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure" rowDataBound="onRowDataBound">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
         <e-grid-columns>
@@ -30,13 +33,23 @@
             <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" template="#service-type-column-template" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" template="#priority-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
-            <e-grid-column field="@nameof(WorkOrder.DoneBy)" headerText="Done By" />
+            <e-grid-column field="@nameof(WorkOrder.DueBy)" format="MM/dd/yyyy" headerText="Due By" type="date" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
         </e-grid-columns>
         <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
 </div>
+
+<style>
+    .warning-row {
+        background-color: darkgoldenrod;
+    }
+
+    .critical-row {
+        background-color: darkred;
+    }
+</style>
 
 <script id='work-order-dialog-template' type="text/x-template">
     <div id="work-order-dialog-template-root"></div>
@@ -103,9 +116,6 @@
                 });
                 ajax.send()
                 .then(function (data) {
-
-                    //It visually looks correct using jquery's .html()
-                    //but when using vanilla .innerHTML, it looks terrible.
                     $('#work-order-dialog-template-root').html(data);
                     //appendElement(data, args.form);
                     
@@ -118,7 +128,23 @@
             }
             //Request the edit partial view and load it into the template.
             else if (args.requestType === 'beginEdit') {
+                var ajax = new ej.base.Ajax({
+                    type: 'GET',
+                    url: '/WorkOrder/GetEditPartial/' + args.rowData.Integer64ID,
+                    contentType: 'application/json',
+                    dataType: 'json'
+                });
+                ajax.send()
+                .then(function (data) {
+                    $('#work-order-dialog-template-root').html(data);
+                    //appendElement(data, args.form);
 
+                    args.form.elements.namedItem('Name').focus();
+                })
+                .catch(function (xhr) {
+                    //TO DO: Display an error popup.
+                    console.log(xhr);
+                });
             }
         }
     }
@@ -154,6 +180,23 @@
                     });
                 }
              }
+        }
+    }
+
+    //The function colors the rows based on the due by.
+    function onRowDataBound(args) {
+        if (args.data.DueBy !== null) {
+            const now = new Date();
+            const today = new Date((now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear())
+
+            //Highlight critical if past the due by.
+            if (today > args.data.DueBy) {
+                args.row.classList.add('critical-row');
+            }
+            //Highlight warning if within 7 days of the due by.
+            else if ((args.data.DueBy - today) / (1000 * 60 * 60 * 24) < 8) {
+                args.row.classList.add('warning-row');
+            }
         }
     }
 

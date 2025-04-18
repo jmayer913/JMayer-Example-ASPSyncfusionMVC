@@ -1,0 +1,30 @@
+﻿@model WorkOrder
+
+<div>
+    <div class="row">
+        <div class="col-md-6">
+            <ejs-textbox id="@nameof(WorkOrder.Name)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Name)" readonly="true" showClearButton="true" value="@Model.Name"></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" floatLabelType="Always" placeholder="Service Type" showClearButton="true" value="Model.ServiceType">
+                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.Priority)" dataSource="@ViewBag.Priorities" floatLabelType="Always" placeholder="Priority" showClearButton="true" value="Model.Priority">
+                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+            <ejs-datepicker id="@nameof(WorkOrder.DueBy)" floatLabelType="Always" min="@DateTime.Today" placeholder="Due By" showClearButton="true" value="@Model.DueBy"></ejs-datepicker>
+        </div>
+    </div>
+</div>
+<ejs-scripts></ejs-scripts>
