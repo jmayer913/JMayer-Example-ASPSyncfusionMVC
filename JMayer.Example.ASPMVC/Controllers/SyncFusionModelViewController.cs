@@ -30,13 +30,13 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// The method returns the add partial view.
     /// </summary>
     /// <returns>The partial view.</returns>
-    public override async Task<IActionResult> GetAddPartialAsync()
+    public override async Task<IActionResult> GetAddPartialViewAsync()
     {
         //The index view uses Model instead of ViewData so I'm not sure how that will work.
         //I'm also not sure why the partial view needs all the records.
         //ViewData["DataSource"] = DataLayer.GetAllAsync();
 
-        return await base.GetAddPartialAsync();
+        return await base.GetAddPartialViewAsync();
     }
 
     /// <summary>

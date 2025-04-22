@@ -110,7 +110,7 @@
             if (args.requestType === 'add') {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
-                    url: '/WorkOrder/GetAddPartial',
+                    url: '/WorkOrder/GetAddPartialView',
                     contentType: 'application/json',
                     dataType: 'json'
                 });
@@ -122,15 +122,18 @@
                     args.form.elements.namedItem('Name').focus();
                 })
                 .catch(function (xhr) {
-                    //TO DO: Display an error popup.
-                    console.log(xhr);
+                    ej.popups.DialogUtility.alert({
+                        title: 'Error',
+                        content: 'Failed to load the add view.',
+                        position: { X: 'center', Y: 'center' }
+                    });
                 });
             }
             //Request the edit partial view and load it into the template.
             else if (args.requestType === 'beginEdit') {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
-                    url: '/WorkOrder/GetEditPartial/' + args.rowData.Integer64ID,
+                    url: '/WorkOrder/GetEditPartialView/' + args.rowData.Integer64ID,
                     contentType: 'application/json',
                     dataType: 'json'
                 });
@@ -142,8 +145,11 @@
                     args.form.elements.namedItem('Name').focus();
                 })
                 .catch(function (xhr) {
-                    //TO DO: Display an error popup.
-                    console.log(xhr);
+                    ej.popups.DialogUtility.alert({
+                        title: 'Error',
+                        content: 'Failed to load the edit view.',
+                        position: { X: 'center', Y: 'center' }
+                    });
                 });
             }
         }

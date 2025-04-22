@@ -19,7 +19,7 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, Work
     /// <remarks>
     /// Overriden so the service types are added to the ViewBag.
     /// </remarks>
-    public override async Task<IActionResult> GetAddPartialAsync()
+    public override async Task<IActionResult> GetAddPartialViewAsync()
     {
         //Create the service types to be displayed in the dropdown.
         ViewBag.ServiceTypes = GetServiceTypes();
@@ -27,14 +27,14 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, Work
         //Create the priorities to be displayed in the dropdown.
         ViewBag.Priorities = GetPriorities();
 
-        return await base.GetAddPartialAsync();
+        return await base.GetAddPartialViewAsync();
     }
 
     /// <inheritdoc/>
     /// <remarks>
     /// Overriden so the service types and priorities are added to the ViewBag.
     /// </remarks>
-    public override Task<IActionResult> GetEditPartialAsync(long id)
+    public override Task<IActionResult> GetEditPartialViewAsync(long id)
     {
         //Create the service types to be displayed in the dropdown.
         ViewBag.ServiceTypes = GetServiceTypes();
@@ -42,7 +42,7 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, Work
         //Create the priorities to be displayed in the dropdown.
         ViewBag.Priorities = GetPriorities();
 
-        return base.GetEditPartialAsync(id);
+        return base.GetEditPartialViewAsync(id);
     }
 
     /// <summary>
