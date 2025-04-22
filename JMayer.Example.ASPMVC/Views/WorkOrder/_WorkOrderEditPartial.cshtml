@@ -6,14 +6,17 @@
             <ejs-textbox id="@nameof(WorkOrder.Name)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Name)" readonly="true" showClearButton="true" value="@Model.Name"></ejs-textbox>
         </div>
         <div class="col-md-6">
-            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" floatLabelType="Always" placeholder="Service Type" showClearButton="true" value="Model.ServiceType">
-                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
-            </ejs-dropdownlist>
+            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
-            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" change="onServiceTypeChange" floatLabelType="Always" placeholder="Service Type" showClearButton="true" value="Model.ServiceType">
+                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+            <ejs-textbox id="@nameof(WorkOrder.OtherTypeOfService)" enabled="false" floatLabelType="Always" placeholder="Other" showClearButton="true"></ejs-textbox>
         </div>
     </div>
     <div class="row">
@@ -27,4 +30,19 @@
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+    //The function shows or hides the other row based on if Other is selected.
+    function onServiceTypeChange(args) {
+        var otherTextBox = document.getElementById('OtherTypeOfService').ej2_instances[0];
+
+        if (args.itemData.Name === 'Other') {
+            otherTextBox.enabled = true;
+        }
+        else {
+            otherTextBox.enabled = false;
+        }
+    }
+</script>
+
 <ejs-scripts></ejs-scripts>

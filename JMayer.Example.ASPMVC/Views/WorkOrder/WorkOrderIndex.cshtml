@@ -31,6 +31,7 @@
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
             <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" template="#service-type-column-template" validationRules="@(new { required = true })" />
+            <e-grid-column field="@nameof(WorkOrder.OtherTypeOfService)" headerText="Other Type of Service" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" template="#priority-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.DueBy)" format="MM/dd/yyyy" headerText="Due By" type="date" />
@@ -97,7 +98,7 @@
     ${/if}
 </script>
 
-<script>
+<script type="text/javascript">
     //The function handles loading the add/edit dialog.
     function onActionComplete(args) {
         if (args.requestType === 'beginEdit' || args.requestType === 'add') {

@@ -16,7 +16,7 @@ public class WorkOrder : UserEditableDataObject
     /// <summary>
     /// The property gets/sets the user defined type of service when Other is selected for the service.
     /// </summary>
-    public string OtherTypeOfService { get; set; } = string.Empty;
+    public string? OtherTypeOfService { get; set; }
 
     /// <summary>
     /// The property gets/sets the priority of the work order.
