@@ -106,6 +106,10 @@
             //Update the dialog's header based on the action.
             dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
 
+            //Create and show a spinner while the partial view loads.
+            ej.popups.createSpinner({ target: args.dialog.element });
+            ej.popups.showSpinner(args.dialog.element);
+
             //Request the add partial view and load it into the template.
             if (args.requestType === 'add') {
                 var ajax = new ej.base.Ajax({
@@ -120,8 +124,10 @@
                     //appendElement(data, args.form);
                     
                     args.form.elements.namedItem('Name').focus();
+                    ej.popups.hideSpinner(args.dialog.element);
                 })
                 .catch(function (xhr) {
+                    ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
                         content: 'Failed to load the add view.',
@@ -143,8 +149,10 @@
                     //appendElement(data, args.form);
 
                     args.form.elements.namedItem('Name').focus();
+                    ej.popups.hideSpinner(args.dialog.element);
                 })
                 .catch(function (xhr) {
+                    ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
                         content: 'Failed to load the edit view.',
