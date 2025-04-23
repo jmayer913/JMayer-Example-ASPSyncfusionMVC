@@ -27,15 +27,16 @@
             actionComplete="onActionComplete" actionFailure="onActionFailure" queryCellInfo="onQueryCellInfo" rowDataBound="onRowDataBound">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
+        <e-grid-filtersettings showFilterBarOperator="true" />
         <e-grid-columns>
             <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="Work Order ID" isPrimaryKey="true" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
-            <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" template="#service-type-column-template" validationRules="@(new { required = true })" />
+            <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" filterBarTemplate="@(new { create = "createServiceTypeColumnFilterDropDown", write = "writeServiceTypeColumnFilterDownDown" })" template="#service-type-column-template" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.OtherTypeOfService)" headerText="Other Type of Service" visible="false" />
-            <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" template="#priority-column-template" />
+            <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" filterBarTemplate="@(new { create = "createPriorityColumnFilterDropDown", write = "writePriorityColumnFilterDownDown" })" template="#priority-column-template" />
             <e-grid-column field="@nameof(WorkOrder.DueBy)" format="MM/dd/yyyy" headerText="Due By" type="date" />
-            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" filterBarTemplate="@(new { create = "createStatusColumnFilterDropDown", write = "writeStatusColumnFilterDownDown" })" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
         </e-grid-columns>
@@ -56,7 +57,7 @@
         content: '\e87e';
     }
 
-    .select-no-arrow {
+    .no-arrow-select {
         /* Firefox */
         -moz-appearance: none;
         /* Safari, Chrome, Opera */
@@ -96,7 +97,7 @@
 </script>
 
 <script id="status-column-template" type="text/x-template">
-    <select id="status-select" class="e-btn select-no-arrow">
+    <select id="status-select" class="e-btn no-arrow-select">
         <option value="0" ${if(Status == 0)}selected${/if}>Open</option>
         <option value="1" ${if(Status == 1)}selected${/if}>In Progress</option>
         <option value="2" ${if(Status == 2)}selected${/if}>Verify</option>
@@ -108,6 +109,77 @@
 </script>
 
 <script type="text/javascript">
+    var priorityColumnFilterDropDown, serviceTypeColumnFilterDropDown, statusColumnFilterDropDown;
+
+    const priorityColumnName = 'Priority';
+    const serviceTypeColumnName = 'ServiceType';
+    const statusColumnName = 'Status';
+    
+    const priorityFilterOptions = [
+        { Name: 'All', Value: -1 },
+        { Name: 'Low', Value: 0 },
+        { Name: 'Normal', Value: 1 },
+        { Name: 'High', Value: 2 },
+    ];
+
+    const serviceTypeFilterOptions = [
+        { Name: 'All', Value: -1 },
+        { Name: 'Inspection', Value: 0 },
+        { Name: 'Routine', Value: 1 },
+        { Name: 'Reactive', Value: 2 },
+        { Name: 'Other', Value: 3 }
+    ];
+
+    const statusFilterOptions = [
+        { Name: 'All', Value: -1 },
+        { Name: 'Open', Value: 0 },
+        { Name: 'In Progress', Value: 1 },
+        { Name: 'Verify', Value: 2 },
+        { Name: 'Closed', Value: 3 },
+    ];
+
+    //The function creates the dropdown for the priority column filter.
+    function createPriorityColumnFilterDropDown() {
+        priorityColumnFilterDropDown = document.createElement('select');
+
+        priorityFilterOptions.forEach((item) => {
+            var option = document.createElement('option');
+            option.value = item.Value;
+            option.innerText = item.Name;
+            priorityColumnFilterDropDown.appendChild(option);
+        });
+
+        return priorityColumnFilterDropDown;
+    }
+
+    //The function creates the dropdown for the service type column filter.    
+    function createServiceTypeColumnFilterDropDown() {
+        serviceTypeColumnFilterDropDown = document.createElement('select');
+
+        serviceTypeFilterOptions.forEach((item) => {
+            var option = document.createElement('option');
+            option.value = item.Value;
+            option.innerText = item.Name;
+            serviceTypeColumnFilterDropDown.appendChild(option);
+        });
+
+        return serviceTypeColumnFilterDropDown;
+    }
+
+    //The function creates the dropdown for the status column filter.
+    function createStatusColumnFilterDropDown() {
+        statusColumnFilterDropDown = document.createElement('select');
+
+        statusFilterOptions.forEach((item) => {
+            var option = document.createElement('option');
+            option.value = item.Value;
+            option.innerText = item.Name;
+            statusColumnFilterDropDown.appendChild(option);
+        });
+
+        return statusColumnFilterDropDown;
+    }
+
     //The function handles loading the add/edit dialog.
     function onActionComplete(args) {
         if (args.requestType === 'add' || args.requestType === 'beginEdit') {
@@ -209,7 +281,7 @@
 
     //The function attaches an event handler to the status dropdown and next status button.
     function onQueryCellInfo(args) {
-        if (args.column.headerText === 'Status') {
+        if (args.column.headerText === statusColumnName) {
             //When the next status button is clicked, the record will be updated with the next status.
             args.cell.querySelector('#next-status-button').addEventListener('click', function () {
                 if (args.data.Status < 3) {
@@ -275,6 +347,66 @@
                 position: { X: 'center', Y: 'center' }
             });
         });
+    }
+
+    //The function creates the ej2 dropdown for the priority column filter and adds it to the associated select element.
+    function writePriorityColumnFilterDownDown() {
+        var dropDownList = new ej.dropdowns.DropDownList({
+            //The filter is applied or cleared based on the selected option.
+            change: function (args) {
+                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+                var value = parseInt(args.value);
+
+                if (value !== -1) {
+                    grid.filterByColumn(priorityColumnName, 'equal', value);
+                }
+                else {
+                    grid.removeFilteredColsByField(priorityColumnName);
+                }
+            }
+        });
+
+        dropDownList.appendTo(priorityColumnFilterDropDown);
+    }
+
+    //The function creates the ej2 dropdown for the service type column filter and adds it to the associated select element.
+    function writeServiceTypeColumnFilterDownDown() {
+        var dropDownList = new ej.dropdowns.DropDownList({
+            //The filter is applied or cleared based on the selected option.
+            change: function (args) {
+                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+                var value = parseInt(args.value);
+
+                if (value !== -1) {
+                    grid.filterByColumn(serviceTypeColumnName, 'equal', value);
+                }
+                else {
+                    grid.removeFilteredColsByField(serviceTypeColumnName);
+                }
+            }
+        });
+
+        dropDownList.appendTo(serviceTypeColumnFilterDropDown);
+    }
+
+    //The function creates the ej2 dropdown for the status column filter and adds it to the associated select element.
+    function writeStatusColumnFilterDownDown() {
+        var dropDownList = new ej.dropdowns.DropDownList({
+            //The filter is applied or cleared based on the selected option.
+            change: function (args) {
+                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+                var value = parseInt(args.value);
+
+                if (value !== -1) {
+                    grid.filterByColumn(statusColumnName, 'equal', value);
+                }
+                else {
+                    grid.removeFilteredColsByField(statusColumnName);
+                }
+            }
+        });
+
+        dropDownList.appendTo(statusColumnFilterDropDown);
     }
 
     function appendElement(elementString, form) {
