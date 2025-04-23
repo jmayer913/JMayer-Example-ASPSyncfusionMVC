@@ -10,6 +10,7 @@
 
     //When I create a new record, the record is added to the Grid but the columns
     //with templates do not show correctly. I need to refresh the browser.
+    //It stopped adding to the Grid and I forget when that happened.
 
     //Using innerHTML when adding the partial view to the template looks terrible
     //but it looks good when JQuery().html() is used.
@@ -202,7 +203,7 @@
     function onRowDataBound(args) {
         if (args.data.DueBy !== null) {
             const now = new Date();
-            const today = new Date((now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear())
+            const today = new Date((now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear());
 
             //Highlight critical if past the due by.
             if (today > args.data.DueBy) {
