@@ -52,8 +52,15 @@
         background-color: darkred;
     }
 
-    .e-next-status-icon::before {
+    .next-status-icon::before {
         content: '\e87e';
+    }
+
+    .select-no-arrow {
+        /* Firefox */
+        -moz-appearance: none;
+        /* Safari, Chrome, Opera */
+        -webkit-appearance: none;
     }
 </style>
 
@@ -89,20 +96,14 @@
 </script>
 
 <script id="status-column-template" type="text/x-template">
-    ${if(Status == 0)}
-        Open
-    ${/if}
-    ${if(Status == 1)}
-        In Progress
-    ${/if}
-    ${if(Status == 2)}
-        Verify
-    ${/if}
-    ${if(Status == 3)}
-        Closed
-    ${/if}
-    <button id="next-button" class="e-btn">
-        <span class="e-icons e-next-status-icon"></span>
+    <select id="status-select" class="e-btn select-no-arrow">
+        <option value="0" ${if(Status == 0)}selected${/if}>Open</option>
+        <option value="1" ${if(Status == 1)}selected${/if}>In Progress</option>
+        <option value="2" ${if(Status == 2)}selected${/if}>Verify</option>
+        <option value="3" ${if(Status == 3)}selected${/if}>Closed</option>
+    </select>
+    <button id="next-status-button" class="e-btn">
+        <span class="e-icons next-status-icon"></span>
     </button>
 </script>
 
@@ -206,13 +207,11 @@
         }
     }
 
-    //The function attaches an event handler for the status button.
+    //The function attaches an event handler to the status dropdown and next status button.
     function onQueryCellInfo(args) {
         if (args.column.headerText === 'Status') {
             //When the next status button is clicked, the record will be updated with the next status.
-            args.cell.querySelector('#next-button').addEventListener('click', function () {
-                var workOrderGrid = document.getElementById('work-order-grid').ej2_instances[0];
-                
+            args.cell.querySelector('#next-status-button').addEventListener('click', function () {
                 if (args.data.Status < 3) {
                     args.data.Status += 1;
                 }
@@ -220,37 +219,13 @@
                     args.data.Status = 0;
                 }
 
-                //See if I can use fetch() over ej ajax or see if ej ajax has more custom response handling.
-                //If a conflict occurs, the user needs to be told and right now, it looks like .catch() won't work.
+                updateWorkOrderOnServer(args.data);
+            });
 
-                var ajax = new ej.base.Ajax({
-                    type: 'POST',
-                    url: '/WorkOrder/Update',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ value: args.data }),
-                    dataType: 'json'
-                });
-                ajax.send()
-                //On success, update the edited timestamp so future updates pass conflict detection and refresh the grid.
-                .then(function (data) {
-                    args.data.LastEditedOn = data.lastEditedOn;
-                    workOrderGrid.refresh();
-                })
-                //On failure, move the status back to the original and display an error message.
-                .catch(function (xhr) {
-                    if (args.data.Status === 0) {
-                        args.data.Status = 3;
-                    }
-                    else {
-                        args.data.Status -= 1;
-                    }
-
-                    ej.popups.DialogUtility.alert({
-                        title: 'Error',
-                        content: 'Failed to update the work order to the next status.',
-                        position: { X: 'center', Y: 'center' }
-                    });
-                });
+            //When the user selects a specific status, the record will be updated with the selected status.
+            args.cell.querySelector('#status-select').addEventListener('change', function (evt) {
+                args.data.Status = parseInt(evt.target.value);
+                updateWorkOrderOnServer(args.data);
             });
         }
     }
@@ -270,6 +245,36 @@
                 args.row.classList.add('warning-row');
             }
         }
+    }
+
+    //The function updates the work order record on the server.
+    function updateWorkOrderOnServer(record) {
+        var workOrderGrid = document.getElementById('work-order-grid').ej2_instances[0];
+
+        //See if I can use fetch() over ej ajax or see if ej ajax has more custom response handling.
+        //If a conflict occurs, the user needs to be told and right now, it looks like .catch() won't work.
+
+        var ajax = new ej.base.Ajax({
+            type: 'POST',
+            url: '/WorkOrder/Update',
+            contentType: 'application/json',
+            data: JSON.stringify({ value: record }),
+            dataType: 'json'
+        });
+        ajax.send()
+        //On success, update the edited timestamp so future updates pass conflict detection and refresh the grid.
+        .then(function (data) {
+            record.LastEditedOn = data.lastEditedOn;
+            workOrderGrid.refresh();
+        })
+        //On failure, display an error message.
+        .catch(function (xhr) {
+            ej.popups.DialogUtility.alert({
+                title: 'Error',
+                content: 'Failed to update the work order.',
+                position: { X: 'center', Y: 'center' }
+            });
+        });
     }
 
     function appendElement(elementString, form) {
