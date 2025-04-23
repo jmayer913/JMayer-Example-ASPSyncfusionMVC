@@ -6,7 +6,7 @@
             <ejs-textbox id="@nameof(WorkOrder.Name)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Name)" readonly="true" showClearButton="true" value="@Model.Name"></ejs-textbox>
         </div>
         <div class="col-md-6">
-            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
+            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
         </div>
     </div>
     <div class="row my-3">
@@ -16,7 +16,7 @@
             </ejs-dropdownlist>
         </div>
         <div class="col-md-6">
-            <ejs-textbox id="@nameof(WorkOrder.OtherTypeOfService)" enabled="false" floatLabelType="Always" placeholder="Other" showClearButton="true"></ejs-textbox>
+            <ejs-textbox id="@nameof(WorkOrder.OtherTypeOfService)" enabled="false" floatLabelType="Always" htmlAttributes="@(new Dictionary<string, object>() { { "maxlength", "100" } })" placeholder="Other" showClearButton="true"></ejs-textbox>
         </div>
     </div>
     <div class="row my-3">
