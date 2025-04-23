@@ -23,8 +23,8 @@
 </div>
 
 <div>
-    <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true"
-              toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" actionComplete="onActionComplete" actionFailure="onActionFailure" rowDataBound="onRowDataBound">
+    <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true" toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" 
+            actionComplete="onActionComplete" actionFailure="onActionFailure" queryCellInfo="onQueryCellInfo" rowDataBound="onRowDataBound">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
         <e-grid-columns>
@@ -34,8 +34,8 @@
             <e-grid-column field="@nameof(WorkOrder.ServiceType)" headerText="Service Type" template="#service-type-column-template" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.OtherTypeOfService)" headerText="Other Type of Service" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" template="#priority-column-template" />
-            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.DueBy)" format="MM/dd/yyyy" headerText="Due By" type="date" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
         </e-grid-columns>
@@ -50,6 +50,10 @@
 
     .critical-row {
         background-color: darkred;
+    }
+
+    .e-next-status-icon::before {
+        content: '\e87e';
     }
 </style>
 
@@ -97,12 +101,15 @@
     ${if(Status == 3)}
         Closed
     ${/if}
+    <button id="next-button" class="e-btn">
+        <span class="e-icons e-next-status-icon"></span>
+    </button>
 </script>
 
 <script type="text/javascript">
     //The function handles loading the add/edit dialog.
     function onActionComplete(args) {
-        if (args.requestType === 'beginEdit' || args.requestType === 'add') {
+        if (args.requestType === 'add' || args.requestType === 'beginEdit') {
             var dialog = args.dialog;
             
             //Update the dialog's header based on the action.
@@ -196,6 +203,55 @@
                     });
                 }
              }
+        }
+    }
+
+    //The function attaches an event handler for the status button.
+    function onQueryCellInfo(args) {
+        if (args.column.headerText === 'Status') {
+            //When the next status button is clicked, the record will be updated with the next status.
+            args.cell.querySelector('#next-button').addEventListener('click', function () {
+                var workOrderGrid = document.getElementById('work-order-grid').ej2_instances[0];
+                
+                if (args.data.Status < 3) {
+                    args.data.Status += 1;
+                }
+                else {
+                    args.data.Status = 0;
+                }
+
+                //See if I can use fetch() over ej ajax or see if ej ajax has more custom response handling.
+                //If a conflict occurs, the user needs to be told and right now, it looks like .catch() won't work.
+
+                var ajax = new ej.base.Ajax({
+                    type: 'POST',
+                    url: '/WorkOrder/Update',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ value: args.data }),
+                    dataType: 'json'
+                });
+                ajax.send()
+                //On success, update the edited timestamp so future updates pass conflict detection and refresh the grid.
+                .then(function (data) {
+                    args.data.LastEditedOn = data.lastEditedOn;
+                    workOrderGrid.refresh();
+                })
+                //On failure, move the status back to the original and display an error message.
+                .catch(function (xhr) {
+                    if (args.data.Status === 0) {
+                        args.data.Status = 3;
+                    }
+                    else {
+                        args.data.Status -= 1;
+                    }
+
+                    ej.popups.DialogUtility.alert({
+                        title: 'Error',
+                        content: 'Failed to update the work order to the next status.',
+                        position: { X: 'center', Y: 'center' }
+                    });
+                });
+            });
         }
     }
 
