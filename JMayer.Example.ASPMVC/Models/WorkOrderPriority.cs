@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace JMayer.Example.ASPMVC.Models;
+﻿namespace JMayer.Example.ASPMVC.Models;
 
 /// <summary>
 /// The enumeration for the work order priority.
