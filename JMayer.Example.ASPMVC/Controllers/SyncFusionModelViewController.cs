@@ -16,14 +16,21 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     where T : DataObject
     where U : Data.Database.DataLayer.IStandardCRUDDataLayer<T>
 {
-    /// <summary>
-    /// The constant for the conflict message key.
-    /// </summary>
-    private const string ConflictMessageKey = "ConflictMessage";
-
     /// <inheritdoc/>
     public SyncFusionModelViewController(Data.Database.DataLayer.IStandardCRUDDataLayer<T> dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger)
     {
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden so the NonAction attribute is applied to it. Syncfusion uses a CRUDModel object so a custom CreateAsync() 
+    /// needed to be created in the SyncFusionModelViewController and this causes a mapping conflict in asp.net core between the
+    /// parent and child classes. The NonAction attributes tells asp.net core to ignore the base CreateAsync().
+    /// </remarks>
+    [NonAction]
+    public override Task<IActionResult> CreateAsync([FromBody] T dataObject)
+    {
+        return base.CreateAsync(dataObject);
     }
 
     /// <summary>
@@ -60,6 +67,30 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden so the NonAction attribute is applied to it. Syncfusion uses a CRUDModel object so a custom DeleteAsync() 
+    /// needed to be created in the SyncFusionModelViewController and this causes a mapping conflict in asp.net core between the
+    /// parent and child classes. The NonAction attributes tells asp.net core to ignore the base DeleteAsync().
+    /// </remarks>
+    [NonAction]
+    public override Task<IActionResult> DeleteAsync(long id)
+    {
+        return base.DeleteAsync(id);
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden so the NonAction attribute is applied to it. Syncfusion uses a CRUDModel object so a custom DeleteAsync() 
+    /// needed to be created in the SyncFusionModelViewController and this causes a mapping conflict in asp.net core between the
+    /// parent and child classes. The NonAction attributes tells asp.net core to ignore the base DeleteAsync().
+    /// </remarks>
+    [NonAction]
+    public override Task<IActionResult> DeleteAsync(string id)
+    {
+        return base.DeleteAsync(id);
+    }
+
     /// <summary>
     /// The method deletes a data object using the data layer.
     /// </summary>
@@ -70,13 +101,20 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     {
         try
         {
-            if (model.KeyColumn == nameof(DataObject.Integer64ID))
+            if (model.Key is null)
+            {
+                Logger.LogWarning("Failed to delete the {Type} because a key was not defined.", DataObjectTypeName);
+                return NotFound(model);
+            }
+            else if (model.KeyColumn == nameof(DataObject.Integer64ID))
             {
                 await DataLayer.DeleteAsync(obj => obj.Integer64ID == Convert.ToInt64(model.Key.ToString()));
+                Logger.LogInformation("The {Key} for the {Type} was successfully deleted.", model.Key.ToString(), DataObjectTypeName);
             }
             else if (model.KeyColumn == nameof(DataObject.StringID))
             {
                 await DataLayer.DeleteAsync(obj => obj.StringID == model.Key.ToString());
+                Logger.LogInformation("The {Key} for the {Type} was successfully deleted.", model.Key.ToString(), DataObjectTypeName);
             }
 
             return Json(model);
@@ -94,6 +132,18 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overridden so the NonAction attribute is applied to it. Syncfusion uses a CRUDModel object so a custom UpdateAsync() 
+    /// needed to be created in the SyncFusionModelViewController and this causes a mapping conflict in asp.net core between the
+    /// parent and child classes. The NonAction attributes tells asp.net core to ignore the base UpdateAsync().
+    /// </remarks>
+    [NonAction]
+    public override Task<IActionResult> UpdateAsync([FromBody] T dataObject)
+    {
+        return base.UpdateAsync(dataObject);
+    }
+
     /// <summary>
     /// The method updates a data object using the data layer.
     /// </summary>
@@ -106,7 +156,14 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         {
             if (ModelState.IsValid)
             {
+                Logger.LogWarning("Failed to update the {Type} because a key was not defined.", DataObjectTypeName);
+                return NotFound(model);
+            }
+            else if (ModelState.IsValid)
+            {
+                UpdateUTCTimesToLocal(model);
                 model.Value = await DataLayer.UpdateAsync(model.Value);
+                Logger.LogInformation("The {Key} for the {Type} was successfully updated.", model.Key.ToString(), DataObjectTypeName);
                 return Json(model.Value);
             }
             else
@@ -131,6 +188,24 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         {
             Logger.LogError(ex, "Failed to update the {Type} for {Key}.", DataObjectTypeName, model.Key.ToString());
             return Problem(detail: "Failed to update the record because of an error on the server.");
+        }
+    }
+
+    /// <summary>
+    /// The method converts the CreatedOn and LastEditedOn properties in the model to the local time.
+    /// </summary>
+    /// <param name="model">The model.</param>
+    /// <remarks>
+    /// Syncfusion stores date times as UTC and sends them to the server as UTC so 
+    /// at least, the LastEditedOn field needs to be converted to the local so it doesn't 
+    /// trigger conflict detection.
+    /// </remarks>
+    protected virtual void UpdateUTCTimesToLocal(CRUDModel<T> model)
+    {
+        if (model.Value is UserEditableDataObject dataObject)
+        {
+            dataObject.CreatedOn = dataObject.CreatedOn.ToLocalTime();
+            dataObject.LastEditedOn = dataObject.LastEditedOn?.ToLocalTime();
         }
     }
 }
