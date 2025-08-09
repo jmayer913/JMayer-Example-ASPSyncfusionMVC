@@ -26,8 +26,8 @@
     <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true" toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" 
             actionComplete="onActionComplete" actionFailure="onActionFailure" queryCellInfo="onQueryCellInfo" rowDataBound="onRowDataBound">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
-        <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
-        <e-grid-filtersettings showFilterBarOperator="true" />
+        <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" allowEditOnDblClick="false" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
+        <e-grid-filtersettings showFilterBarOperator="false" />
         <e-grid-columns>
             <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="Work Order ID" isPrimaryKey="true" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" validationRules="@(new { required = true })" />
@@ -39,6 +39,9 @@
             <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" filterBarTemplate="@(new { create = "createStatusColumnFilterDropDown", write = "writeStatusColumnFilterDownDown" })" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.CreatedOn)" format="MM/dd/yyyy HH:mm:sss" headerText="Created On" type="datetime" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.LastEditedOn)" format="MM/dd/yyyy HH:mm:sss" headerText="Last Edited On" type="datetime" visible="false" />
+            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" allowReordering="false" allowResizing="false" filterBarTemplate="@(new { create = "createStatusColumnFilterDropDown", write = "writeStatusColumnFilterDownDown" })" template="#status-column-template" />
         </e-grid-columns>
         <e-grid-pagesettings pageCount="5" />
     </ejs-grid>
@@ -109,33 +112,104 @@
 </script>
 
 <script type="text/javascript">
-    var priorityColumnFilterDropDown, serviceTypeColumnFilterDropDown, statusColumnFilterDropDown;
-
-    const priorityColumnName = 'Priority';
-    const serviceTypeColumnName = 'ServiceType';
-    const statusColumnName = 'Status';
+    //A reference to the EJ2 instance of the work order grid.
+    var ej2WorkOrderGrid = null;
     
+    /*
+        Globally stores the last ID of the record which had a status change using the status buttons.
+        
+        When a work order becomes resolved, the edit dialog is automatically opened and the user can
+        enter the problem and resolution if need be. Making this happen in syncfusion requires a complex
+        set of actions which are described below.
+        
+        When a status button is clicked, the status is updated on the record and then the grid's data
+        manager is told to update its internal record and the record on the server. When that finishes,
+        the grid is told to refresh itself so the status is updated on the UI. When the refresh completes,
+        the onActionComplete() event handler will query the record based on the last ID stored and it will
+        check the status. If the status is resolved, the grid will be told to start editing the row related
+        to the last ID and this will open the edit dialog.
+    */
+    var lastRecordStatusChangeID = null;
+
+    //A reference to the drop down for the priority column's filter.
+    var priorityColumnFilterDropDown;
+    
+    //A reference to the drop down for the service type column's filter.
+    var serviceTypeColumnFilterDropDown;
+    
+    //A reference to the drop down for the status column's filter.
+    var statusColumnFilterDropDown;
+
+    //Constants for the field names.
+    const integer64IDFieldName = 'Integer64ID';
+    const priorityFieldName = 'Priority';
+    const serviceTypeFieldName = 'ServiceType';
+    const statusFieldName = 'Status';
+
+    //Enum for HTTP statuses.
+    const httpStatus = Object.freeze({
+        BAD_REQUEST: 400,
+        CONFLICT: 409,
+        INTERNAL_SERVER_ERROR: 500
+    });
+
+    //Enum for Syncfusion grid actions.
+    const syncFusionGridAction = Object.freeze({
+        ADD: 'add',
+        BEGIN_EDIT: 'beginEdit',
+        CANCEL: 'cancel',
+        REFRESH: 'refresh',
+        SAVE: 'save'
+    });
+
+    //Enum for the work order priorities.
+    const workOrderPriority = Object.freeze({
+        LOW: 0,
+        NORMAL: 1,
+        HIGH: 2
+    });
+
+    //Enum for the work order service types.
+    const workOrderServiceType = Object.freeze({
+        INSPECTION: 0,
+        ROUTINE: 1,
+        REACTIVE: 2,
+        OTHER: 3
+    });
+
+    //Enum for the work order statuses.
+    const workOrderStatus = Object.freeze({
+        OPEN: 0,
+        IN_PROGRESS: 1,
+        RESOLVED: 2,
+        CLOSED: 3
+    });
+
+    //Constant for the all value in the dropdown filter options.
+    const allValue = -1;
+    
+    //Constants for the dropdown filter options.
     const priorityFilterOptions = [
-        { Name: 'All', Value: -1 },
-        { Name: 'Low', Value: 0 },
-        { Name: 'Normal', Value: 1 },
-        { Name: 'High', Value: 2 },
+        { Name: 'All', Value: allValue },
+        { Name: 'Low', Value: workOrderPriority.LOW },
+        { Name: 'Normal', Value: workOrderPriority.NORMAL },
+        { Name: 'High', Value: workOrderPriority.HIGH },
     ];
 
     const serviceTypeFilterOptions = [
-        { Name: 'All', Value: -1 },
-        { Name: 'Inspection', Value: 0 },
-        { Name: 'Routine', Value: 1 },
-        { Name: 'Reactive', Value: 2 },
-        { Name: 'Other', Value: 3 }
+        { Name: 'All', Value: allValue },
+        { Name: 'Inspection', Value: workOrderServiceType.INSPECTION },
+        { Name: 'Routine', Value: workOrderServiceType.ROUTINE },
+        { Name: 'Reactive', Value: workOrderServiceType.REACTIVE },
+        { Name: 'Other', Value: workOrderServiceType.OTHER }
     ];
 
     const statusFilterOptions = [
-        { Name: 'All', Value: -1 },
-        { Name: 'Open', Value: 0 },
-        { Name: 'In Progress', Value: 1 },
-        { Name: 'Verify', Value: 2 },
-        { Name: 'Closed', Value: 3 },
+        { Name: 'All', Value: allValue },
+        { Name: 'Open', Value: workOrderStatus.OPEN },
+        { Name: 'In Progress', Value: workOrderStatus.IN_PROGRESS },
+        { Name: 'Resolved', Value: workOrderStatus.RESOLVED },
+        { Name: 'Closed', Value: workOrderStatus.CLOSED },
     ];
 
     //The function creates the dropdown for the priority column filter.
@@ -180,20 +254,43 @@
         return statusColumnFilterDropDown;
     }
 
+    //The function returns the work order from the data manager based on the ID.
+    function getWorkOrderFromDataManager(id) {
+        var workOrderGrid = getEJ2WorkOrderGrid();
+        var query = new ej.data.Query().where(integer64IDFieldName, 'equal', id);
+        var queryResult = workOrderGrid.dataSource.executeLocal(query);
+
+        if (queryResult.length === 1) {
+            return queryResult[0];
+        }
+        else {
+            return null;
+        }
+    }
+
+    //The function returns the EJ2 instance for the work order grid.
+    function getEJ2WorkOrderGrid() {
+        if (ej2WorkOrderGrid === null) {
+            ej2WorkOrderGrid = $('#work-order-grid').get(0).ej2_instances[0];
+        }
+
+        return ej2WorkOrderGrid;
+    }
+
     //The function handles loading the add/edit dialog.
     function onActionComplete(args) {
-        if (args.requestType === 'add' || args.requestType === 'beginEdit') {
+        if (args.requestType === syncFusionGridAction.ADD || args.requestType === syncFusionGridAction.BEGIN_EDIT) {
             var dialog = args.dialog;
             
             //Update the dialog's header based on the action.
-            dialog.header = args.requestType === 'beginEdit' ? 'Edit Work Order' : 'Add Work Order';
+            dialog.header = args.requestType === syncFusionGridAction.BEGIN_EDIT ? 'Edit Work Order' : 'Add Work Order';
 
             //Create and show a spinner while the partial view loads.
             ej.popups.createSpinner({ target: args.dialog.element });
             ej.popups.showSpinner(args.dialog.element);
 
             //Request the add partial view and load it into the template.
-            if (args.requestType === 'add') {
+            if (args.requestType === syncFusionGridAction.ADD) {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
                     url: '/WorkOrder/GetAddPartialView',
@@ -201,14 +298,12 @@
                     dataType: 'json'
                 });
                 ajax.send()
-                .then(function (data) {
+                .then((data) => {
                     $('#work-order-dialog-template-root').html(data);
-                    //appendElement(data, args.form);
-                    
                     args.form.elements.namedItem('Name').focus();
                     ej.popups.hideSpinner(args.dialog.element);
                 })
-                .catch(function (xhr) {
+                .catch((xhr) => {
                     ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
@@ -218,7 +313,7 @@
                 });
             }
             //Request the edit partial view and load it into the template.
-            else if (args.requestType === 'beginEdit') {
+            else if (args.requestType === syncFusionGridAction.BEGIN_EDIT) {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
                     url: '/WorkOrder/GetEditPartialView/' + args.rowData.Integer64ID,
@@ -226,14 +321,12 @@
                     dataType: 'json'
                 });
                 ajax.send()
-                .then(function (data) {
+                .then((data) => {
                     $('#work-order-dialog-template-root').html(data);
-                    //appendElement(data, args.form);
-
                     args.form.elements.namedItem('Name').focus();
                     ej.popups.hideSpinner(args.dialog.element);
                 })
-                .catch(function (xhr) {
+                .catch((xhr) => {
                     ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
@@ -243,6 +336,31 @@
                 });
             }
         }
+        else if (args.requestType === syncFusionGridAction.REFRESH && lastRecordStatusChangeID !== null) {
+            var workOrderGrid = getEJ2WorkOrderGrid();
+            var query = new ej.data.Query().where('Integer64ID', 'equal', lastRecordStatusChangeID);
+
+            //Opening the dialog only works when its in the executeQuery() promise; 
+            //when I use executeLocal() (no promise) weird behavior happens with the 
+            //dialog and I think its because the Grid.refresh() promise isn't finishing 
+            //before the Grid.startEdit() is called.
+            workOrderGrid.dataSource.executeQuery(query)
+            .then(queryResult => {
+                if (queryResult.result.length === 1) {
+                    var record = queryResult.result[0];
+
+                    if (record !== null && record.Status === workOrderStatus.RESOLVED) {
+                        var rowIndex = workOrderGrid.getRowIndexByPrimaryKey(lastRecordStatusChangeID);
+                        workOrderGrid.selectRow(rowIndex);
+                        workOrderGrid.startEdit();
+                    }
+                }
+            });
+        }
+        else if (args.requestType === syncFusionGridAction.SAVE || args.requestType === syncFusionGridAction.CANCEL) {
+            //Clear the last ID for the status change whenever a save or cancel occurs.
+            lastRecordStatusChangeID = null;
+        }
     }
 
     //The function handles any failures.
@@ -251,16 +369,16 @@
              const response = args.error[0].error
 
              //Check for 400 (Bad Request), 409 (Conflict) & 500 (Internal Server Error) because those will return json.
-             if (response.status === 400 || response.status === 409 || response.status === 500) {
+             if (response.status === httpStatus.BAD_REQUEST || response.status === httpStatus.CONFLICT || response.status === httpStatus.INTERNAL_SERVER_ERROR) {
                 const responseBody = await response.json();
 
                 //The server returned 400 (Bad Request) with validation problem details.
-                if (response.status === 400 && responseBody.errors !== undefined) {
+                if (response.status === httpStatus.BAD_REQUEST && responseBody.errors !== undefined) {
                     //Ideally I would like to the Grid's add/edit popup to display validation issues.
                     //I also need to handle if a ServerSideValidation or ValidationProblemDetails object is returned.
                 }
-                //The server responded with 409. Display the conflict message in a popup.
-                else if (response.status === 409 && responseBody.ConflictMessage !== undefined) {
+                //The server responded with 409 (Conflict). Display the conflict message in a popup.
+                else if (response.status === httpStatus.CONFLICT && responseBody.ConflictMessage !== undefined) {
                     ej.popups.DialogUtility.alert({
                         title: 'Warning',
                         content: responseBody.ConflictMessage[0],
@@ -268,7 +386,7 @@
                     });
                 }
                 //The server returned 500 (Internal Server Error) with problem details. Display the details in a popup.
-                else if (response.status === 500 && responseBody.detail !== undefined) {
+                else if (response.status === httpStatus.INTERNAL_SERVER_ERROR && responseBody.detail !== undefined) {
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
                         content: responseBody.detail,
@@ -281,11 +399,23 @@
 
     //The function attaches an event handler to the status dropdown and next status button.
     function onQueryCellInfo(args) {
-        if (args.column.headerText === statusColumnName) {
+        if (args.column.headerText === statusFieldName) {
             //When the next status button is clicked, the record will be updated with the next status.
-            args.cell.querySelector('#next-status-button').addEventListener('click', function () {
-                if (args.data.Status < 3) {
-                    args.data.Status += 1;
+            args.cell.querySelector('#next-status-button').addEventListener('click', (evt) => {
+                //Query the record from the data manager and update that.
+                var record = getWorkOrderFromDataManager(args.data.Integer64ID);
+
+                if (record !== null) {
+                    lastRecordStatusChangeID = record.Integer64ID
+
+                    if (record.Status < workOrderStatus.CLOSED) {
+                        record.Status += 1;
+                    }
+                    else {
+                        record.Status = workOrderStatus.OPEN;
+                    }
+
+                    updateWorkOrderInDataManager(record);
                 }
                 else {
                     args.data.Status = 0;
@@ -304,7 +434,7 @@
 
     //The function colors the rows based on the due by.
     function onRowDataBound(args) {
-        if (args.data.DueBy !== null) {
+        if (args.data.Status !== workOrderStatus.CLOSED && args.data.DueBy !== null) {
             const now = new Date();
             const today = new Date((now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear());
 
@@ -341,6 +471,14 @@
         })
         //On failure, display an error message.
         .catch(function (xhr) {
+    //The function updates the work order record in the grid's data manager.
+    function updateWorkOrderInDataManager(record) {
+        var workOrderGrid = getEJ2WorkOrderGrid();
+        workOrderGrid.dataSource.update('Integer64ID', record)
+        .then(() => {
+            workOrderGrid.refresh();
+        })
+        .catch((error) => {
             ej.popups.DialogUtility.alert({
                 title: 'Error',
                 content: 'Failed to update the work order.',
@@ -353,15 +491,15 @@
     function writePriorityColumnFilterDownDown() {
         var dropDownList = new ej.dropdowns.DropDownList({
             //The filter is applied or cleared based on the selected option.
-            change: function (args) {
-                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+            change: (args) => {
+                var grid = getEJ2WorkOrderGrid();
                 var value = parseInt(args.value);
 
-                if (value !== -1) {
-                    grid.filterByColumn(priorityColumnName, 'equal', value);
+                if (value !== allValue) {
+                    grid.filterByColumn(priorityFieldName, 'equal', value);
                 }
                 else {
-                    grid.removeFilteredColsByField(priorityColumnName);
+                    grid.removeFilteredColsByField(priorityFieldName);
                 }
             }
         });
@@ -373,15 +511,15 @@
     function writeServiceTypeColumnFilterDownDown() {
         var dropDownList = new ej.dropdowns.DropDownList({
             //The filter is applied or cleared based on the selected option.
-            change: function (args) {
-                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+            change: (args) => {
+                var grid = getEJ2WorkOrderGrid();
                 var value = parseInt(args.value);
 
-                if (value !== -1) {
-                    grid.filterByColumn(serviceTypeColumnName, 'equal', value);
+                if (value !== allValue) {
+                    grid.filterByColumn(serviceTypeFieldName, 'equal', value);
                 }
                 else {
-                    grid.removeFilteredColsByField(serviceTypeColumnName);
+                    grid.removeFilteredColsByField(serviceTypeFieldName);
                 }
             }
         });
@@ -393,39 +531,19 @@
     function writeStatusColumnFilterDownDown() {
         var dropDownList = new ej.dropdowns.DropDownList({
             //The filter is applied or cleared based on the selected option.
-            change: function (args) {
-                var grid = document.getElementById('work-order-grid').ej2_instances[0];
+            change: (args) => {
+                var grid = getEJ2WorkOrderGrid();
                 var value = parseInt(args.value);
 
-                if (value !== -1) {
-                    grid.filterByColumn(statusColumnName, 'equal', value);
+                if (value !== allValue) {
+                    grid.filterByColumn(statusFieldName, 'equal', value);
                 }
                 else {
-                    grid.removeFilteredColsByField(statusColumnName);
+                    grid.removeFilteredColsByField(statusFieldName);
                 }
             }
         });
 
         dropDownList.appendTo(statusColumnFilterDropDown);
-    }
-
-    function appendElement(elementString, form) {
-        //Add HTML to the div in the dialog template.
-        form.querySelector('#work-order-dialog-template-root').innerHTML = elementString;
-
-        //The next part takes the script generated for the template and moves it into the document's head.
-        //I don't know why the syncfusion is doing this.
-        
-        // //Create a script tag on the document.
-        // var script = document.createElement('script');
-        // script.type = "text/javascript";
-
-        // //Find the script tag in the dialog template.
-        // var serverScript = form.querySelector('#work-order-dialog-template-root').querySelector('script');
-
-        // //Add the dialog template's script to the document head and then, remove the dialog template's script.
-        // script.textContent = serverScript.innerHTML;
-        // document.head.appendChild(script);
-        // serverScript.remove();
     }
 </script>
