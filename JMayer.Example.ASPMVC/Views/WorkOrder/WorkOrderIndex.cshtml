@@ -372,10 +372,13 @@
              if (response.status === httpStatus.BAD_REQUEST || response.status === httpStatus.CONFLICT || response.status === httpStatus.INTERNAL_SERVER_ERROR) {
                 const responseBody = await response.json();
 
-                //The server returned 400 (Bad Request) with validation problem details.
-                if (response.status === httpStatus.BAD_REQUEST && responseBody.errors !== undefined) {
-                    //Ideally I would like to the Grid's add/edit popup to display validation issues.
-                    //I also need to handle if a ServerSideValidation or ValidationProblemDetails object is returned.
+                //The server returned 400 (Bad Request) with validation problem details. Display the first error message in a popup.
+                if (response.status === httpStatus.BAD_REQUEST && responseBody.Errors !== undefined) {
+                    ej.popups.DialogUtility.alert({
+                        title: 'Warning',
+                        content: responseBody.Errors[0].ErrorMessage,
+                        position: { X: 'center', Y: 'center' }
+                    });
                 }
                 //The server responded with 409 (Conflict). Display the conflict message in a popup.
                 else if (response.status === httpStatus.CONFLICT && responseBody.ConflictMessage !== undefined) {
