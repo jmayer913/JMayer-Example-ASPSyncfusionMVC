@@ -104,7 +104,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             if (model.Key is null)
             {
                 Logger.LogWarning("Failed to delete the {Type} because a key was not defined.", DataObjectTypeName);
-                return NotFound(model);
+                return NotFound(new { UserMessage = "The record could not be found because a key was not provided." });
             }
             else if (model.KeyColumn == nameof(DataObject.Integer64ID))
             {
@@ -121,9 +121,8 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
         catch (DataObjectDeleteConflictException ex)
         {
-            ModelState.AddModelError(ConflictMessageKey, "The record has a dependency that prevents it from being deleted.");
             Logger.LogError(ex, "Failed to delete the {Key} {Type} because of a data conflict.", model.Key.ToString(), DataObjectTypeName);
-            return Conflict(ModelState);
+            return Conflict(new { UserMessage = "The record has a dependency that prevents it from being deleted." });
         }
         catch (Exception ex)
         {
@@ -157,7 +156,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             if (ModelState.IsValid)
             {
                 Logger.LogWarning("Failed to update the {Type} because a key was not defined.", DataObjectTypeName);
-                return NotFound(model);
+                return NotFound(new { UserMessage = "The record could not be found because a key was not provided." });
             }
             else if (ModelState.IsValid)
             {
@@ -174,15 +173,19 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
         catch (DataObjectUpdateConflictException ex)
         {
-            ModelState.AddModelError(ConflictMessageKey, "The submitted data was detected to be out of date; please refresh the page and try again.");
             Logger.LogWarning(ex, "Failed to update {Key} {Type} because the data was considered old.", model.Key.ToString(), DataObjectTypeName);
-            return Conflict(ModelState);
+            return Conflict(new { UserMessage = "The submitted data was detected to be out of date; please refresh the page and try again." });
         }
         catch (DataObjectValidationException ex)
         {
             ServerSideValidationResult serverSideValidationResult = new(ex.ValidationResults);
             Logger.LogWarning(ex, "Failed to update the {Key} {Type} because of a server-side validation error.", model.Key.ToString(), DataObjectTypeName);
             return BadRequest(serverSideValidationResult);
+        }
+        catch (IDNotFoundException ex)
+        {
+            Logger.LogWarning(ex, "Failed to update the {Key} {Type} because it was not found.", model.Key.ToString(), DataObjectTypeName);
+            return NotFound(new { UserMessage = "The record was not found; please refresh the page because another user may have deleted it." });
         }
         catch (Exception ex)
         {

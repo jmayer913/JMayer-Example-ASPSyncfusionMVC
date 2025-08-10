@@ -149,6 +149,7 @@
     //Enum for HTTP statuses.
     const httpStatus = Object.freeze({
         BAD_REQUEST: 400,
+        NOT_FOUND: 404,
         CONFLICT: 409,
         INTERNAL_SERVER_ERROR: 500
     });
@@ -368,8 +369,8 @@
         if (args.error !== undefined && Array.isArray(args.error) && args.error.length == 1) {
              const response = args.error[0].error
 
-             //Check for 400 (Bad Request), 409 (Conflict) & 500 (Internal Server Error) because those will return json.
-             if (response.status === httpStatus.BAD_REQUEST || response.status === httpStatus.CONFLICT || response.status === httpStatus.INTERNAL_SERVER_ERROR) {
+             //Check for 400 (Bad Request), 404 (Not Found), 409 (Conflict) & 500 (Internal Server Error) because those will return json.
+             if (response.status === httpStatus.BAD_REQUEST || response.status == httpStatus.NOT_FOUND || response.status === httpStatus.CONFLICT || response.status === httpStatus.INTERNAL_SERVER_ERROR) {
                 const responseBody = await response.json();
 
                 //The server returned 400 (Bad Request) with validation problem details. Display the first error message in a popup.
@@ -380,11 +381,19 @@
                         position: { X: 'center', Y: 'center' }
                     });
                 }
-                //The server responded with 409 (Conflict). Display the conflict message in a popup.
-                else if (response.status === httpStatus.CONFLICT && responseBody.ConflictMessage !== undefined) {
+                //The server responded with 404 (Not Found). Display the user message provided by the server in a popup.
+                else if (response.status === httpStatus.NOT_FOUND && responseBody.UserMessage !== undefined {
                     ej.popups.DialogUtility.alert({
                         title: 'Warning',
-                        content: responseBody.ConflictMessage[0],
+                        content: responseBody.UserMessage,
+                        position: { X: 'center', Y: 'center' }
+                    });
+                }
+                //The server responded with 409 (Conflict). Display the user message provided by the server in a popup.
+                else if (response.status === httpStatus.CONFLICT && responseBody.UserMessage !== undefined) {
+                    ej.popups.DialogUtility.alert({
+                        title: 'Warning',
+                        content: responseBody.UserMessage,
                         position: { X: 'center', Y: 'center' }
                     });
                 }
