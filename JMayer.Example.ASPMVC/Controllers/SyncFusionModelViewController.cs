@@ -17,8 +17,11 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     where U : Data.Database.DataLayer.IStandardCRUDDataLayer<T>
 {
     /// <inheritdoc/>
-    public SyncFusionModelViewController(Data.Database.DataLayer.IStandardCRUDDataLayer<T> dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger)
+    public SyncFusionModelViewController(U dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger) 
     {
+        IsActionRedirectedOnConflict = false;
+        IsActionRedirectedOnError = false;
+        IsCUDActionRedirectedOnSuccess = false;
     }
 
     /// <inheritdoc/>

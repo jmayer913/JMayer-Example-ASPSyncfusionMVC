@@ -8,18 +8,16 @@ namespace JMayer.Example.ASPMVC.Controllers;
 /// <summary>
 /// The class manages HTTP requests for views and actions associated with work orders.
 /// </summary>
-public class WorkOrderController : SyncFusionModelViewController<WorkOrder, WorkOrderDataLayer>
+public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWorkOrderDataLayer>
 {
     /// <inheritdoc/>
-    public WorkOrderController(IWorkOrderDataLayer dataLayer, ILogger<WorkOrderController> logger) : base(dataLayer, logger)
-    {
-    }
+    public WorkOrderController(IWorkOrderDataLayer dataLayer, ILogger<WorkOrderController> logger) : base(dataLayer, logger) { }
 
     /// <inheritdoc/>
     /// <remarks>
     /// Overriden so the service types are added to the ViewBag.
     /// </remarks>
-    public override async Task<IActionResult> GetAddPartialViewAsync()
+    public override async Task<IActionResult> AddPartialViewAsync()
     {
         //Create the service types to be displayed in the dropdown.
         ViewBag.ServiceTypes = GetServiceTypes();
@@ -27,14 +25,14 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, Work
         //Create the priorities to be displayed in the dropdown.
         ViewBag.Priorities = GetPriorities();
 
-        return await base.GetAddPartialViewAsync();
+        return await base.AddPartialViewAsync();
     }
 
     /// <inheritdoc/>
     /// <remarks>
     /// Overriden so the service types and priorities are added to the ViewBag.
     /// </remarks>
-    public override Task<IActionResult> GetEditPartialViewAsync(long id)
+    public override async Task<IActionResult> EditPartialViewAsync(long id)
     {
         //Create the service types to be displayed in the dropdown.
         ViewBag.ServiceTypes = GetServiceTypes();
@@ -42,7 +40,7 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, Work
         //Create the priorities to be displayed in the dropdown.
         ViewBag.Priorities = GetPriorities();
 
-        return base.GetEditPartialViewAsync(id);
+        return await base.EditPartialViewAsync(id);
     }
 
     /// <summary>

@@ -294,7 +294,7 @@
             if (args.requestType === syncFusionGridAction.ADD) {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
-                    url: '/WorkOrder/GetAddPartialView',
+                    url: '/WorkOrder/AddPartialView',
                     contentType: 'application/json',
                     dataType: 'json'
                 });
@@ -317,7 +317,7 @@
             else if (args.requestType === syncFusionGridAction.BEGIN_EDIT) {
                 var ajax = new ej.base.Ajax({
                     type: 'GET',
-                    url: '/WorkOrder/GetEditPartialView/' + args.rowData.Integer64ID,
+                    url: '/WorkOrder/EditPartialView/' + args.rowData.Integer64ID,
                     contentType: 'application/json',
                     dataType: 'json'
                 });
@@ -382,7 +382,7 @@
                     });
                 }
                 //The server responded with 404 (Not Found). Display the user message provided by the server in a popup.
-                else if (response.status === httpStatus.NOT_FOUND && responseBody.UserMessage !== undefined {
+                else if (response.status === httpStatus.NOT_FOUND && responseBody.UserMessage !== undefined) {
                     ej.popups.DialogUtility.alert({
                         title: 'Warning',
                         content: responseBody.UserMessage,
