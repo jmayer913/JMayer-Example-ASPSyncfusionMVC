@@ -27,12 +27,12 @@ public class WorkOrder : UserEditableDataObject
     /// <summary>
     /// The property gets/sets the problem found.
     /// </summary>
-    public string Problem { get; set; } = string.Empty;
+    public string? Problem { get; set; } = string.Empty;
 
     /// <summary>
     /// The property gets/sets the resolution to the work order.
     /// </summary>
-    public string Resolution { get; set; } = string.Empty;
+    public string? Resolution { get; set; } = string.Empty;
 
     /// <summary>
     /// The property gets/sets the type of service to be done.
@@ -45,6 +45,17 @@ public class WorkOrder : UserEditableDataObject
     /// </summary>
     [Required]
     public WorkOrderStatus Status { get; set; }
+
+    /// <summary>
+    /// The default constructor.
+    /// </summary>
+    public WorkOrder() { }
+
+    /// <summary>
+    /// The copy constructor.
+    /// </summary>
+    /// <param name="copy">The copy.</param>
+    public WorkOrder(WorkOrder copy) => MapProperties(copy);
 
     /// <inheritdoc/>
     public override void MapProperties(DataObject dataObject)
