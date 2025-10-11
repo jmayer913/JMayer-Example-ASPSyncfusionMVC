@@ -14,7 +14,7 @@ namespace JMayer.Example.ASPMVC.Controllers;
 /// <typeparam name="U">Must be an IStandardCRUDDataLayer so the controller can interact with the collection/table associated with it.</typeparam>
 public class SyncFusionModelViewController<T, U> : StandardModelViewController<T, U>
     where T : DataObject
-    where U : Data.Database.DataLayer.IStandardCRUDDataLayer<T>
+    where U : IStandardCRUDDataLayer<T>
 {
     /// <inheritdoc/>
     public SyncFusionModelViewController(U dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger) 
