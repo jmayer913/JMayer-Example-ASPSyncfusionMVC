@@ -1,7 +1,7 @@
 ﻿using JMayer.Data.Data;
 using JMayer.Data.Database.DataLayer;
-using JMayer.Data.HTTP.DataLayer;
 using JMayer.Web.Mvc.Controller;
+using JMayer.Web.Mvc.Extension;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.Base;
 
@@ -59,9 +59,9 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
         catch (DataObjectValidationException ex)
         {
-            ServerSideValidationResult serverSideValidationResult = new(ex.ValidationResults);
             Logger.LogWarning(ex, "Failed to create the {Type} because of a server-side validation error.", DataObjectTypeName);
-            return BadRequest(serverSideValidationResult);
+            ex.CopyToModelState(ModelState);
+            return ValidationProblem(ModelState);
         }
         catch (Exception ex)
         {
@@ -181,9 +181,9 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         }
         catch (DataObjectValidationException ex)
         {
-            ServerSideValidationResult serverSideValidationResult = new(ex.ValidationResults);
             Logger.LogWarning(ex, "Failed to update the {Key} {Type} because of a server-side validation error.", model.Key.ToString(), DataObjectTypeName);
-            return BadRequest(serverSideValidationResult);
+            ex.CopyToModelState(ModelState);
+            return ValidationProblem(ModelState);
         }
         catch (IDNotFoundException ex)
         {
