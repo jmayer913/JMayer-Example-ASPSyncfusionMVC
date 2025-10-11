@@ -5,7 +5,7 @@ namespace TestProject.Test.EqualityComparer;
 /// <summary>
 /// The class manages testing the work order equality comparer.
 /// </summary>
-public class WorkOrderEqualityComparerUnitTest
+public class WorkOrderUnitTest
 {
     /// <summary>
     /// The constant for the description.
