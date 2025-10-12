@@ -29,6 +29,7 @@
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" allowEditOnDblClick="false" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
         <e-grid-filtersettings showFilterBarOperator="false" />
         <e-grid-columns>
+            <e-grid-column headerText="" allowFiltering="false" allowSorting="false" allowReordering="false" allowResizing="false" commands="@(new List<object> { new { type = "Edit", buttonOption = new { iconCss = "e-icons e-edit", cssClass = "e-flat" } }, new { type = "Delete", buttonOption = new { iconCss = "e-icons e-delete", cssClass = "e-flat" } } })" lockColumn="true" width="120" />
             <e-grid-column field="@nameof(WorkOrder.Integer64ID)" headerText="Work Order ID" isPrimaryKey="true" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Name)" headerText="Name" validationRules="@(new { required = true })" />
             <e-grid-column field="@nameof(WorkOrder.Description)" headerText="Description" />
@@ -474,8 +475,8 @@
             const now = new Date();
             const today = new Date((now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear());
 
-            //Highlight critical if past the due by.
-            if (today > args.data.DueBy) {
+            //Highlight critical if today or past the due by.
+            if (today >= args.data.DueBy) {
                 args.row.classList.add('critical-row');
             }
             //Highlight warning if within 7 days of the due by.

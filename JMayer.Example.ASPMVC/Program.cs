@@ -1,4 +1,23 @@
+using JMayer.Example.ASPMVC;
+using JMayer.Example.ASPMVC.DataLayers;
+
 var builder = WebApplication.CreateBuilder(args);
+
+#region Setup Database, Data Layers & Logging
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+WorkOrderExampleBuilder exampleBuilder = new();
+exampleBuilder.Build();
+
+//Add the data layers. Because the example data needs to be built before registration and the data
+//layers are memory based, the data layer objects aren't being built with the middleware.
+builder.Services.AddSingleton<IWorkOrderDataLayer, WorkOrderDataLayer>(factory => (WorkOrderDataLayer)exampleBuilder.WorkOrderDataLayer);
+
+#endregion
+
+#region Setup Services
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
