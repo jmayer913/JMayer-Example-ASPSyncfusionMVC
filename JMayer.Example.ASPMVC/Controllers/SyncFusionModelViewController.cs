@@ -1,6 +1,6 @@
 ﻿using JMayer.Data.Data;
 using JMayer.Data.Database.DataLayer;
-using JMayer.Web.Mvc.Controller;
+using JMayer.Web.Mvc.Controller.Mvc;
 using JMayer.Web.Mvc.Extension;
 using Microsoft.AspNetCore.Mvc;
 using Syncfusion.EJ2.Base;
@@ -19,8 +19,6 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// <inheritdoc/>
     public SyncFusionModelViewController(U dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger) 
     {
-        IsActionRedirectedOnConflict = false;
-        IsActionRedirectedOnError = false;
         IsCUDActionRedirectedOnSuccess = false;
     }
 
