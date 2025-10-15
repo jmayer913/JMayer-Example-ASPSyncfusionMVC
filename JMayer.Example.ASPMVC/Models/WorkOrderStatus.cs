@@ -18,7 +18,7 @@ public enum WorkOrderStatus
     /// <summary>
     /// The work has finished and it needs a final signoff.
     /// </summary>
-    Verify,
+    Resolved,
 
     /// <summary>
     /// The work order is no longer active.

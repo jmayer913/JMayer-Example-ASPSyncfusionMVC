@@ -29,6 +29,21 @@
             <ejs-datepicker id="@nameof(WorkOrder.DueBy)" floatLabelType="Always" min="@DateTime.Today" placeholder="Due By" showClearButton="true" value="@Model.DueBy"></ejs-datepicker>
         </div>
     </div>
+
+    @if (Model.Status is WorkOrderStatus.Resolved or WorkOrderStatus.Closed)
+    {
+        <div class="row my-3">
+            <div class="col-md-12">
+                <ejs-textarea id="@nameof(WorkOrder.Problem)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Problem)" resizeMode="None" showClearButton="true" value="@Model.Problem"></ejs-textarea>
+            </div>
+        </div>
+        <div class="row my-3">
+            <div class="col-md-12">
+                <ejs-textarea id="@nameof(WorkOrder.Resolution)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Resolution)" resizeMode="None" showClearButton="true" value="@Model.Resolution"></ejs-textarea>
+            </div>
+        </div>
+    }
+
 </div>
 
 <script type="text/javascript">

@@ -20,9 +20,22 @@ builder.Services.AddSingleton<IWorkOrderDataLayer, WorkOrderDataLayer>(factory =
 #region Setup Services
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddJsonOptions(options =>
+{
+    //Syncfusion is expecting pascal case.
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
+
+#endregion
 
 var app = builder.Build();
+
+#region Setup App
+
+//Register Syncfusion license
+using StreamReader streamReader = new("C:\\GitHub\\Syncfusion License Key.txt");
+string licenseKey = streamReader.ReadToEnd();
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(licenseKey);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -34,14 +47,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
+app.UseAntiforgery();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+#endregion
 
 app.Run();
 

@@ -71,34 +71,4 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
             new() { Name = "Other", Integer64ID = (long)WorkOrderServiceType.Other },
         ];
     }
-
-    /// <inheritdoc/>
-    /// <remarks>
-    /// Overriden to include dropdown lists in the ViewBag.
-    /// </remarks>
-    public override async Task<IActionResult> IndexAsync()
-    {
-        //For testing purposes only. Remove once example data is auto generated.
-        if (await DataLayer.CountAsync() == 0)
-        {
-            await DataLayer.CreateAsync([
-                new WorkOrder() { Name = "Work Order 1", Description = "A description for work order 1.", DueBy = DateTime.Today.AddDays(-2) },
-                new WorkOrder() { Name = "Work Order 2", Description = "A description for work order 2.", DueBy = DateTime.Today },
-                new WorkOrder() { Name = "Work Order 3", Description = "A description for work order 3.", DueBy = DateTime.Today.AddDays(3) },
-                new WorkOrder() { Name = "Work Order 4", Description = "A description for work order 4.", DueBy = DateTime.Today.AddDays(8) },
-                new WorkOrder() { Name = "Work Order 5", Description = "A description for work order 5." },
-            ]);
-        }
-
-        ////Create the statuses to be displayed in the dropdown.
-        //ViewBag.Statuses = new List<dynamic>()
-        //{
-        //    new { Text = "Open", Value = WorkOrderStatus.Open },
-        //    new { Text = "In Progress", Value = WorkOrderStatus.InProgress },
-        //    new { Text = "Verify", Value = WorkOrderStatus.Verify },
-        //    new { Text = "Closed", Value = WorkOrderStatus.Closed },
-        //};
-
-        return await base.IndexAsync();
-    }
 }

@@ -1,19 +1,6 @@
 ﻿@model List<WorkOrder>
 
 @{
-    //Issues:
-
-    //The ejs is throwing a javascript error when validation occurs.
-    //I've found out it works correctly when column validation is used
-    //but when you turn on data annotation validation, it throws the javascript
-    //error.
-
-    //When I create a new record, the record is added to the Grid but the columns
-    //with templates do not show correctly. I need to refresh the browser.
-    //It stopped adding to the Grid and I forget when that happened.
-
-    //Using innerHTML when adding the partial view to the template looks terrible
-    //but it looks good when JQuery().html() is used.
 
     ViewData["Title"] = "Work Orders";
 }
@@ -23,8 +10,8 @@
 </div>
 
 <div>
-    <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true" toolbar="@(new List<string>() { "Add", "Delete", "Cancel", "ColumnChooser" })" 
-            actionComplete="onActionComplete" actionFailure="onActionFailure" queryCellInfo="onQueryCellInfo" rowDataBound="onRowDataBound">
+    <ejs-grid id="work-order-grid" allowReordering="true" allowFiltering="true" allowPaging="true" allowSorting="true" showColumnChooser="true" toolbar="@(new List<string>() { "Add", "ColumnChooser" })"
+              actionComplete="onActionComplete" actionFailure="onActionFailure" queryCellInfo="onQueryCellInfo" rowDataBound="onRowDataBound">
         <e-data-manager json="@Model.ToArray()" adaptor="RemoteSaveAdaptor" insertUrl="/WorkOrder/Create" updateUrl="/WorkOrder/Update" removeUrl="/WorkOrder/Delete" />
         <e-grid-editsettings allowAdding="true" allowDeleting="true" allowEditing="true" allowEditOnDblClick="false" mode="Dialog" showDeleteConfirmDialog="true" template="#work-order-dialog-template" />
         <e-grid-filtersettings showFilterBarOperator="false" />
@@ -37,7 +24,6 @@
             <e-grid-column field="@nameof(WorkOrder.OtherTypeOfService)" headerText="Other Type of Service" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Priority)" headerText="Priority" filterBarTemplate="@(new { create = "createPriorityColumnFilterDropDown", write = "writePriorityColumnFilterDownDown" })" template="#priority-column-template" />
             <e-grid-column field="@nameof(WorkOrder.DueBy)" format="MM/dd/yyyy" headerText="Due By" type="date" />
-            <e-grid-column field="@nameof(WorkOrder.Status)" headerText="Status" filterBarTemplate="@(new { create = "createStatusColumnFilterDropDown", write = "writeStatusColumnFilterDownDown" })" template="#status-column-template" />
             <e-grid-column field="@nameof(WorkOrder.Problem)" headerText="Problem" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.Resolution)" headerText="Resolution" visible="false" />
             <e-grid-column field="@nameof(WorkOrder.CreatedOn)" format="MM/dd/yyyy HH:mm:sss" headerText="Created On" type="datetime" visible="false" />
@@ -104,7 +90,7 @@
     <select id="status-select" class="e-btn no-arrow-select">
         <option value="0" ${if(Status == 0)}selected${/if}>Open</option>
         <option value="1" ${if(Status == 1)}selected${/if}>In Progress</option>
-        <option value="2" ${if(Status == 2)}selected${/if}>Verify</option>
+        <option value="2" ${if(Status == 2)}selected${/if}>Resolved</option>
         <option value="3" ${if(Status == 3)}selected${/if}>Closed</option>
     </select>
     <button id="next-status-button" class="e-btn">
@@ -454,22 +440,23 @@
 
                     updateWorkOrderInDataManager(record);
                 }
-                else {
-                    args.data.Status = 0;
-                }
-
-                updateWorkOrderOnServer(args.data);
             });
 
             //When the user selects a specific status, the record will be updated with the selected status.
-            args.cell.querySelector('#status-select').addEventListener('change', function (evt) {
-                args.data.Status = parseInt(evt.target.value);
-                updateWorkOrderOnServer(args.data);
+            args.cell.querySelector('#status-select').addEventListener('change', (evt) => {
+                //Query the record from the data manager and update that.
+                var record = getWorkOrderFromDataManager(args.data.Integer64ID);
+
+                if (record !== null) {
+                    lastRecordStatusChangeID = record.Integer64ID
+                    record.Status = parseInt(evt.target.value);
+                    updateWorkOrderInDataManager(record);
+                }
             });
         }
     }
 
-    //The function colors the rows based on the due by.
+    //The function colors the rows based on the status and due by.
     function onRowDataBound(args) {
         if (args.data.Status !== workOrderStatus.CLOSED && args.data.DueBy !== null) {
             const now = new Date();
@@ -486,28 +473,6 @@
         }
     }
 
-    //The function updates the work order record on the server.
-    function updateWorkOrderOnServer(record) {
-        var workOrderGrid = document.getElementById('work-order-grid').ej2_instances[0];
-
-        //See if I can use fetch() over ej ajax or see if ej ajax has more custom response handling.
-        //If a conflict occurs, the user needs to be told and right now, it looks like .catch() won't work.
-
-        var ajax = new ej.base.Ajax({
-            type: 'POST',
-            url: '/WorkOrder/Update',
-            contentType: 'application/json',
-            data: JSON.stringify({ value: record }),
-            dataType: 'json'
-        });
-        ajax.send()
-        //On success, update the edited timestamp so future updates pass conflict detection and refresh the grid.
-        .then(function (data) {
-            record.LastEditedOn = data.lastEditedOn;
-            workOrderGrid.refresh();
-        })
-        //On failure, display an error message.
-        .catch(function (xhr) {
     //The function updates the work order record in the grid's data manager.
     function updateWorkOrderInDataManager(record) {
         var workOrderGrid = getEJ2WorkOrderGrid();

@@ -39,7 +39,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// The method creates a data object using the data layer.
     /// </summary>
     /// <param name="model">The model.</param>
-    /// <returns>The created data object.</returns>
+    /// <returns>The created data object or a negative status code.</returns>
     [HttpPost]
     public virtual async Task<IActionResult> CreateAsync([FromBody] CRUDModel<T> model)
     {
@@ -48,6 +48,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             if (ModelState.IsValid)
             {
                 model.Value = await DataLayer.CreateAsync(model.Value);
+                Logger.LogInformation("The {Type} was successfully created.", DataObjectTypeName);
                 return Json(model.Value);
             }
             else
@@ -97,7 +98,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// The method deletes a data object using the data layer.
     /// </summary>
     /// <param name="model">The model.</param>
-    /// <returns>The model.</returns>
+    /// <returns>The deleted data object or a negative status code.</returns>
     [HttpPost]
     public virtual async Task<IActionResult> DeleteAsync([FromBody] CRUDModel<T> model)
     {
@@ -149,13 +150,13 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// The method updates a data object using the data layer.
     /// </summary>
     /// <param name="model">The model.</param>
-    /// <returns>The updated data object.</returns>
+    /// <returns>The updated data object or a negative status code.</returns>
     [HttpPost]
     public virtual async Task<IActionResult> UpdateAsync([FromBody] CRUDModel<T> model)
     {
         try
         {
-            if (ModelState.IsValid)
+            if (model.Key is null)
             {
                 Logger.LogWarning("Failed to update the {Type} because a key was not defined.", DataObjectTypeName);
                 return NotFound(new { UserMessage = "The record could not be found because a key was not provided." });
@@ -169,7 +170,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             }
             else
             {
-                Logger.LogWarning("Failed to update the {Key} {Type} because of a model validation error.", model?.Key?.ToString() ?? string.Empty, DataObjectTypeName);
+                Logger.LogWarning("Failed to update the {Key} {Type} because of a model validation error.", model.Key.ToString(), DataObjectTypeName);
                 return ValidationProblem(ModelState);
             }
         }
