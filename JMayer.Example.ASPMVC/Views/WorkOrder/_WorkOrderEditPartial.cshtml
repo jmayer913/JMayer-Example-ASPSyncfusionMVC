@@ -1,0 +1,63 @@
+﻿@model WorkOrder
+
+<div>
+    <div class="row my-3">
+        <div class="col-md-6">
+            <ejs-textbox id="@nameof(WorkOrder.Name)" floatLabelType="Always" htmlAttributes="@(new Dictionary<string, object>() { { "maxlength", "100" } })" placeholder="@nameof(WorkOrder.Name)" showClearButton="true" value="@Model.Name"></ejs-textbox>
+        </div>
+        <div class="col-md-6">
+            <ejs-textarea id="@nameof(WorkOrder.Description)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Description)" resizeMode="None" showClearButton="true" value="@Model.Description"></ejs-textarea>
+        </div>
+    </div>
+    <div class="row my-3">
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" change="onServiceTypeChange" floatLabelType="Always" placeholder="Service Type" showClearButton="true" value="Model.ServiceType">
+                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+            <ejs-textbox id="@nameof(WorkOrder.OtherTypeOfService)" enabled="false" floatLabelType="Always" htmlAttributes="@(new Dictionary<string, object>() { { "maxlength", "100" } })" placeholder="Other" showClearButton="true"></ejs-textbox>
+        </div>
+    </div>
+    <div class="row my-3">
+        <div class="col-md-6">
+            <ejs-dropdownlist id="@nameof(WorkOrder.Priority)" dataSource="@ViewBag.Priorities" floatLabelType="Always" placeholder="Priority" showClearButton="true" value="Model.Priority">
+                <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
+            </ejs-dropdownlist>
+        </div>
+        <div class="col-md-6">
+            <ejs-datepicker id="@nameof(WorkOrder.DueBy)" floatLabelType="Always" min="@DateTime.Today" placeholder="Due By" showClearButton="true" value="@Model.DueBy"></ejs-datepicker>
+        </div>
+    </div>
+
+    @if (Model.Status is WorkOrderStatus.Resolved or WorkOrderStatus.Closed)
+    {
+        <div class="row my-3">
+            <div class="col-md-12">
+                <ejs-textarea id="@nameof(WorkOrder.Problem)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Problem)" resizeMode="None" showClearButton="true" value="@Model.Problem"></ejs-textarea>
+            </div>
+        </div>
+        <div class="row my-3">
+            <div class="col-md-12">
+                <ejs-textarea id="@nameof(WorkOrder.Resolution)" floatLabelType="Always" maxLength="1000" placeholder="@nameof(WorkOrder.Resolution)" resizeMode="None" showClearButton="true" value="@Model.Resolution"></ejs-textarea>
+            </div>
+        </div>
+    }
+
+</div>
+
+<script type="text/javascript">
+    //The function shows or hides the other row based on if Other is selected.
+    function onServiceTypeChange(args) {
+        var otherTextBox = document.getElementById('OtherTypeOfService').ej2_instances[0];
+
+        if (args.itemData.Name === 'Other') {
+            otherTextBox.enabled = true;
+        }
+        else {
+            otherTextBox.enabled = false;
+        }
+    }
+</script>
+
+<ejs-scripts></ejs-scripts>
