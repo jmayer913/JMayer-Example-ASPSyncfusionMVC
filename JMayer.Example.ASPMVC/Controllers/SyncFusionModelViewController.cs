@@ -20,6 +20,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     public SyncFusionModelViewController(U dataLayer, ILogger<SyncFusionModelViewController<T, U>> logger) : base(dataLayer, logger) 
     {
         IsCUDActionRedirectedOnSuccess = false;
+        IsDetailsIncludedInNegativeResponse = true;
     }
 
     /// <inheritdoc/>
