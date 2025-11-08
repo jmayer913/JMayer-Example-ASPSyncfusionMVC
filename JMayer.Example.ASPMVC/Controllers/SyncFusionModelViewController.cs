@@ -1,5 +1,6 @@
 ﻿using JMayer.Data.Data;
 using JMayer.Data.Database.DataLayer;
+using JMayer.Data.HTTP.Details;
 using JMayer.Web.Mvc.Controller.Mvc;
 using JMayer.Web.Mvc.Extension;
 using Microsoft.AspNetCore.Mvc;
@@ -45,17 +46,15 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     {
         try
         {
-            if (ModelState.IsValid)
-            {
-                model.Value = await DataLayer.CreateAsync(model.Value);
-                Logger.LogInformation("The {Type} was successfully created.", DataObjectTypeName);
-                return Json(model.Value);
-            }
-            else
+            if (ModelState.IsValid is false)
             {
                 Logger.LogWarning("Failed to create the {Type} because of a model validation error.", DataObjectTypeName);
                 return ValidationProblem(ModelState);
             }
+
+            model.Value = await DataLayer.CreateAsync(model.Value);
+            Logger.LogInformation("The {Type} was successfully created.", DataObjectTypeName);
+            return Json(model.Value);
         }
         catch (DataObjectValidationException ex)
         {
@@ -66,7 +65,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to create the {Type}.", DataObjectTypeName);
-            return Problem(detail: "Failed to create the record because of an error on the server.");
+            return Problem(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Create Error", detail: $"Failed to create the {DataObjectTypeName.SpaceCapitalLetters()} record because of an error on the server.");
         }
     }
 
@@ -107,9 +106,10 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             if (model.Key is null)
             {
                 Logger.LogWarning("Failed to delete the {Type} because a key was not defined.", DataObjectTypeName);
-                return NotFound(new { UserMessage = "The record could not be found because a key was not provided." });
+                return NotFound(new NotFoundDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Delete Error - Not Found", detail: $"The {DataObjectTypeName.SpaceCapitalLetters()} record could not be found because a key was not provided."));
             }
-            else if (model.KeyColumn == nameof(DataObject.Integer64ID))
+
+            if (model.KeyColumn == nameof(DataObject.Integer64ID))
             {
                 await DataLayer.DeleteAsync(obj => obj.Integer64ID == Convert.ToInt64(model.Key.ToString()));
                 Logger.LogInformation("The {Key} for the {Type} was successfully deleted.", model.Key.ToString(), DataObjectTypeName);
@@ -125,12 +125,12 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         catch (DataObjectDeleteConflictException ex)
         {
             Logger.LogError(ex, "Failed to delete the {Key} {Type} because of a data conflict.", model.Key.ToString(), DataObjectTypeName);
-            return Conflict(new { UserMessage = "The record has a dependency that prevents it from being deleted." });
+            return Conflict(new ConflictDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Delete Error - Data Conflict", detail: $"The {DataObjectTypeName.SpaceCapitalLetters()} record has a dependency that prevents it from being deleted; the dependency needs to be deleted first."));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to delete the {Key} {Type}.", model.Key.ToString(), DataObjectTypeName);
-            return Problem(detail: "Failed to delete the record because of an error on the server.");
+            return Problem(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Delete Error", detail: "Failed to delete the record because of an error on the server.");
         }
     }
 
@@ -159,25 +159,23 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             if (model.Key is null)
             {
                 Logger.LogWarning("Failed to update the {Type} because a key was not defined.", DataObjectTypeName);
-                return NotFound(new { UserMessage = "The record could not be found because a key was not provided." });
+                return NotFound(new NotFoundDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Update Error - Not Found", detail: $"The {DataObjectTypeName.SpaceCapitalLetters()} record could not be found because a key was not provided."));
             }
-            else if (ModelState.IsValid)
-            {
-                UpdateUTCTimesToLocal(model);
-                model.Value = await DataLayer.UpdateAsync(model.Value);
-                Logger.LogInformation("The {Key} for the {Type} was successfully updated.", model.Key.ToString(), DataObjectTypeName);
-                return Json(model.Value);
-            }
-            else
+            else if (ModelState.IsValid is false)
             {
                 Logger.LogWarning("Failed to update the {Key} {Type} because of a model validation error.", model.Key.ToString(), DataObjectTypeName);
                 return ValidationProblem(ModelState);
             }
+
+            UpdateUTCTimesToLocal(model);
+            model.Value = await DataLayer.UpdateAsync(model.Value);
+            Logger.LogInformation("The {Key} for the {Type} was successfully updated.", model.Key.ToString(), DataObjectTypeName);
+            return Json(model.Value);
         }
         catch (DataObjectUpdateConflictException ex)
         {
             Logger.LogWarning(ex, "Failed to update {Key} {Type} because the data was considered old.", model.Key.ToString(), DataObjectTypeName);
-            return Conflict(new { UserMessage = "The submitted data was detected to be out of date; please refresh the page and try again." });
+            return Conflict(new ConflictDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Update Error - Data Conflict", detail: $"The submitted {DataObjectTypeName.SpaceCapitalLetters()} data was detected to be out of date; please refresh the page and try again."));
         }
         catch (DataObjectValidationException ex)
         {
@@ -188,12 +186,12 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
         catch (IDNotFoundException ex)
         {
             Logger.LogWarning(ex, "Failed to update the {Key} {Type} because it was not found.", model.Key.ToString(), DataObjectTypeName);
-            return NotFound(new { UserMessage = "The record was not found; please refresh the page because another user may have deleted it." });
+            return NotFound(new NotFoundDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Update Error - Not Found", detail: $"The {DataObjectTypeName.SpaceCapitalLetters()} record was not found; please refresh the page because another user may have deleted it."));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to update the {Type} for {Key}.", DataObjectTypeName, model.Key.ToString());
-            return Problem(detail: "Failed to update the record because of an error on the server.");
+            return Problem(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Update Error", detail: "Failed to update the record because of an error on the server.");
         }
     }
 
@@ -208,7 +206,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     /// </remarks>
     protected virtual void UpdateUTCTimesToLocal(CRUDModel<T> model)
     {
-        if (model.Value is UserEditableDataObject dataObject)
+        if (model.Value is DataObject dataObject)
         {
             dataObject.CreatedOn = dataObject.CreatedOn.ToLocalTime();
             dataObject.LastEditedOn = dataObject.LastEditedOn?.ToLocalTime();

@@ -6,6 +6,6 @@ namespace JMayer.Example.ASPMVC.DataLayers;
 /// <summary>
 /// The interface for interacting with a work order collection in a database using CRUD operations.
 /// </summary>
-public interface IWorkOrderDataLayer : IUserEditableDataLayer<WorkOrder>
+public interface IWorkOrderDataLayer : IStandardCRUDDataLayer<WorkOrder>
 {
 }

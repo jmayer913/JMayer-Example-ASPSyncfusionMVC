@@ -295,7 +295,7 @@
                     ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
-                        content: 'Failed to load the add view.',
+                        content: 'Failed to load the add view; please refresh the page and try again.',
                         position: { X: 'center', Y: 'center' }
                     });
                 });
@@ -318,7 +318,7 @@
                     ej.popups.hideSpinner(args.dialog.element);
                     ej.popups.DialogUtility.alert({
                         title: 'Error',
-                        content: 'Failed to load the edit view.',
+                        content: 'Failed to load the edit view; please refresh the page and try again.',
                         position: { X: 'center', Y: 'center' }
                     });
                 });
@@ -387,18 +387,18 @@
             });
         }
         //The server responded with 404 (Not Found). Display the user message provided by the server in a popup.
-        else if (response.status === httpStatus.NOT_FOUND && responseBody.UserMessage !== undefined && typeof responseBody.UserMessage === 'string') {
+        else if (response.status === httpStatus.NOT_FOUND && typeof responseBody.detail !== undefined && typeof responseBody.detail === 'string') {
             ej.popups.DialogUtility.alert({
                 title: 'Warning',
-                content: responseBody.UserMessage,
+                content: responseBody.detail,
                 position: { X: 'center', Y: 'center' }
             });
         }
         //The server responded with 409 (Conflict). Display the user message provided by the server in a popup.
-        else if (response.status === httpStatus.CONFLICT && responseBody.UserMessage !== undefined && typeof responseBody.UserMessage === 'string') {
+        else if (response.status === httpStatus.CONFLICT && typeof responseBody.detail !== undefined && typeof responseBody.detail === 'string') {
             ej.popups.DialogUtility.alert({
                 title: 'Warning',
-                content: responseBody.UserMessage,
+                content: responseBody.detail,
                 position: { X: 'center', Y: 'center' }
             });
         }
@@ -483,7 +483,7 @@
         .catch((error) => {
             ej.popups.DialogUtility.alert({
                 title: 'Error',
-                content: 'Failed to update the work order.',
+                content: 'Failed to update the work order; please refresh the page and try again.',
                 position: { X: 'center', Y: 'center' }
             });
         });
