@@ -11,11 +11,7 @@ public class WorkOrderExampleBuilder
     /// <summary>
     /// The property gets/sets the data layer used to interact with work orders.
     /// </summary>
-    public IWorkOrderDataLayer WorkOrderDataLayer { get; set; } = new WorkOrderDataLayer()
-    {
-        //Syncfusion is stripping milliseconds and below so a less accurate comparison needs to be done.
-        IsLessPreciseTimestampComparisonEnabled = true,
-    };
+    public IWorkOrderDataLayer WorkOrderDataLayer { get; set; } = new WorkOrderDataLayer();
 
     /// <summary>
     /// The method builds the work order example data.
