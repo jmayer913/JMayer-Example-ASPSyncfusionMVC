@@ -183,7 +183,7 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
             ex.CopyToModelState(ModelState);
             return ValidationProblem(ModelState);
         }
-        catch (IDNotFoundException ex)
+        catch (DataObjectIDNotFoundException ex)
         {
             Logger.LogWarning(ex, "Failed to update the {Key} {Type} because it was not found.", model.Key.ToString(), DataObjectTypeName);
             return NotFound(new NotFoundDetails(title: $"{DataObjectTypeName.SpaceCapitalLetters()} Update Error - Not Found", detail: $"The {DataObjectTypeName.SpaceCapitalLetters()} record was not found; please refresh the page because another user may have deleted it."));
