@@ -10,6 +10,27 @@ namespace JMayer.Example.ASPMVC.Controllers;
 /// </summary>
 public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWorkOrderDataLayer>
 {
+    /// <summary>
+    /// The priorties.
+    /// </summary>
+    private static readonly List<ListView> _priorities =
+        [
+            new() { Name = "Low", Integer64ID = (long)WorkOrderPriority.Low },
+            new() { Name = "Normal", Integer64ID = (long)WorkOrderPriority.Normal },
+            new() { Name = "High", Integer64ID = (long)WorkOrderPriority.High },
+        ];
+
+    /// <summary>
+    /// The service types.
+    /// </summary>
+    private static readonly List<ListView> _serviceTypes =
+        [
+            new() { Name = "Inspection", Integer64ID = (long)WorkOrderServiceType.Inspection },
+            new() { Name = "Routine", Integer64ID = (long)WorkOrderServiceType.Routine },
+            new() { Name = "Reactive", Integer64ID = (long)WorkOrderServiceType.Reactive },
+            new() { Name = "Other", Integer64ID = (long)WorkOrderServiceType.Other },
+        ];
+
     /// <inheritdoc/>
     public WorkOrderController(IWorkOrderDataLayer dataLayer, ILogger<WorkOrderController> logger) : base(dataLayer, logger) { }
 
@@ -20,10 +41,10 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
     public override async Task<IActionResult> AddPartialViewAsync()
     {
         //Create the service types to be displayed in the dropdown.
-        ViewBag.ServiceTypes = GetServiceTypes();
+        ViewBag.ServiceTypes = new List<ListView>(_serviceTypes);
 
         //Create the priorities to be displayed in the dropdown.
-        ViewBag.Priorities = GetPriorities();
+        ViewBag.Priorities = new List<ListView>(_priorities);
 
         return await base.AddPartialViewAsync();
     }
@@ -35,40 +56,11 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
     public override async Task<IActionResult> EditPartialViewAsync(long id)
     {
         //Create the service types to be displayed in the dropdown.
-        ViewBag.ServiceTypes = GetServiceTypes();
+        ViewBag.ServiceTypes = new List<ListView>(_serviceTypes);
 
         //Create the priorities to be displayed in the dropdown.
-        ViewBag.Priorities = GetPriorities();
+        ViewBag.Priorities = new List<ListView>(_priorities);
 
         return await base.EditPartialViewAsync(id);
-    }
-
-    /// <summary>
-    /// The method returns the priorties.
-    /// </summary>
-    /// <returns>A list of priorities.</returns>
-    private static List<ListView> GetPriorities()
-    {
-        return
-        [
-            new() { Name = "Low", Integer64ID = (long)WorkOrderPriority.Low },
-            new() { Name = "Normal", Integer64ID = (long)WorkOrderPriority.Normal },
-            new() { Name = "High", Integer64ID = (long)WorkOrderPriority.High },
-        ];
-    }
-    
-    /// <summary>
-    /// The method returns the service types.
-    /// </summary>
-    /// <returns>A list of service types.</returns>
-    private static List<ListView> GetServiceTypes()
-    {
-        return
-        [
-            new() { Name = "Inspection", Integer64ID = (long)WorkOrderServiceType.Inspection },
-            new() { Name = "Routine", Integer64ID = (long)WorkOrderServiceType.Routine },
-            new() { Name = "Reactive", Integer64ID = (long)WorkOrderServiceType.Reactive },
-            new() { Name = "Other", Integer64ID = (long)WorkOrderServiceType.Other },
-        ];
     }
 }

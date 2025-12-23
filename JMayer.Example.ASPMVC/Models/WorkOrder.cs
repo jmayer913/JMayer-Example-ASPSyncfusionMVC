@@ -6,12 +6,17 @@ namespace JMayer.Example.ASPMVC.Models;
 /// <summary>
 /// The class represents a work order.
 /// </summary>
-public class WorkOrder : UserEditableDataObject
+public class WorkOrder : DataObject
 {
     /// <summary>
     /// The property gets/sets when the work order is expected to done by.
     /// </summary>
     public DateTime? DueBy { get; set; }
+
+    /// <inheritdoc/>
+    /// <remarks>Overridden to add Required data annotation.</remarks>
+    [Required]
+    public override string? Name { get => base.Name; set => base.Name = value; }
 
     /// <summary>
     /// The property gets/sets the user defined type of service when Other is selected for the service.

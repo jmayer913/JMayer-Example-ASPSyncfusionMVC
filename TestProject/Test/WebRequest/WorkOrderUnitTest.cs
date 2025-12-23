@@ -1,9 +1,8 @@
-﻿using JMayer.Example.ASPMVC.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using JMayer.Data.HTTP.Details;
+using JMayer.Example.ASPMVC.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Syncfusion.EJ2.Base;
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace TestProject.Test.WebRequest;
 
@@ -135,7 +134,6 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         if (workOrder is null)
         {
             Assert.Fail("Failed to create a work order for the test.");
-            return;
         }
 
         WorkOrder duplicateWorkOrder = new()
@@ -155,7 +153,6 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
-        Assert.NotEmpty(validationProblemDetails.Errors); //Errors is not empty.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == nameof(WorkOrder.Name)); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[nameof(WorkOrder.Name)]); //Name must have a single error.
         Assert.Equal($"The {workOrder.Name} name already exists in the data store.", validationProblemDetails.Errors[nameof(WorkOrder.Name)][0]); //Confirm the correct error message.
@@ -182,7 +179,6 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
-        Assert.NotEmpty(validationProblemDetails.Errors); //Errors is not empty.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.Name)}"); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"]); //Name must have a single error.
         Assert.Equal("The Name field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"][0]); //Confirm the correct error message.
@@ -345,7 +341,6 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
-        Assert.NotEmpty(validationProblemDetails.Errors); //Errors is not empty.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == nameof(WorkOrder.Name)); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[nameof(WorkOrder.Name)]); //Name must have a single error.
         Assert.Equal($"The {workOrder.Name} name already exists in the data store.", validationProblemDetails.Errors[nameof(WorkOrder.Name)][0]); //Confirm the correct error message.
@@ -382,7 +377,6 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
-        Assert.NotEmpty(validationProblemDetails.Errors); //Errors is not empty.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.Name)}"); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"]); //Name must have a single error.
         Assert.Equal("The Name field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"][0]); //Confirm the correct error message.
@@ -414,17 +408,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        JsonElement? jsonNotFoundResponse = await httpResponseMessage.Content.ReadFromJsonAsync<JsonElement>();
+        NotFoundDetails? notFoundDetails = await httpResponseMessage.Content.ReadFromJsonAsync<NotFoundDetails>();
 
-        Assert.NotNull(jsonNotFoundResponse); //The conflict dynamic type must have been returned.
-
-        //Ensure the UserMessage property exists.
-        if (jsonNotFoundResponse.Value.TryGetProperty("UserMessage", out JsonElement userMessageJsonElementProperty) is false)
-        {
-            Assert.Fail("No UserMessage was found in the response.");
-        }
-
-        Assert.Equal("The record was not found; please refresh the page because another user may have deleted it.", userMessageJsonElementProperty.GetString()); //Confirm the correct user message.
+        Assert.NotNull(notFoundDetails); //The conflict detail must have been returned.
+        Assert.Equal("Work Order Update Error - Not Found", notFoundDetails.Title); //Confirm the correct title.
+        Assert.Equal("The Work Order record was not found; please refresh the page because another user may have deleted it.", notFoundDetails.Detail); //Confirm the correct user message.
     }
 
     /// <summary>
@@ -461,16 +449,10 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        JsonElement? jsonConflictResponse = await httpResponseMessage.Content.ReadFromJsonAsync<JsonElement>();
+        ConflictDetails? conflictDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ConflictDetails>();
 
-        Assert.NotNull(jsonConflictResponse); //The conflict dynamic type must have been returned.
-
-        //Ensure the UserMessage property exists.
-        if (jsonConflictResponse.Value.TryGetProperty("UserMessage", out JsonElement userMessageJsonElementProperty) is false)
-        {
-            Assert.Fail("No UserMessage was found in the response.");
-        }
-
-        Assert.Equal("The submitted data was detected to be out of date; please refresh the page and try again.", userMessageJsonElementProperty.GetString()); //Confirm the correct user message.
+        Assert.NotNull(conflictDetails); //The conflict dynamic type must have been returned.
+        Assert.Equal("Work Order Update Error - Data Conflict", conflictDetails.Title); //Confirm the correct title.
+        Assert.Equal("The submitted Work Order data was detected to be out of date; please refresh the page and try again.", conflictDetails.Detail); //Confirm the correct user message.
     }
 }
