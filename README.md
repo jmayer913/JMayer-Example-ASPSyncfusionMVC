@@ -10,10 +10,27 @@ a problem and resolution. The rows will be colored red or yellow to highlight if
 
 <img width="1913" height="641" alt="image" src="https://github.com/user-attachments/assets/7fe1d925-b741-4fa8-901b-e5faf9dd3bd8" />
 
+### Add / Edit
+
+On the work orders page, the user can create a new work order or edit an existing work order.
+
+* Name - A friendly name for the work order; required and must be unique.
+* Description - A description about the work needed to be performed; optional.
+* Service Type - The type of service that will be done; required. Options are Inspection, Routine, Reactive and Other.
+* Other Type of Service - A friendly name to describe the other type of service; only enabled when the Service Type is Other.
+* Priority - The urgency of completion for the work order; required. Options are Low, Normal and High.
+* Due By - When the work order is expected to be done by; optional.
+
 <img width="377" height="326" alt="image" src="https://github.com/user-attachments/assets/ae4f5b4c-fe41-4298-a635-f334af83802c" />
 
 <img width="380" height="326" alt="image" src="https://github.com/user-attachments/assets/f72385f3-f91d-478e-b968-07451aec748c" />
 
+When editing and the status is resolved or closed, a description of the problem can be entered and/or a description of the resolution to the problem can be entered; both are optional.
+
 <img width="373" height="463" alt="image" src="https://github.com/user-attachments/assets/927f3e30-6039-49e2-bf49-18312936735f" />
+
+### Delete
+
+On the work orders page, the user can delete a work order. The user will be required to confirm the deletion or cancel. On confirmed, the work order will be deleted.
 
 <img width="270" height="129" alt="image" src="https://github.com/user-attachments/assets/8cfd16bc-dc65-407d-98f4-8810fabfc083" />
