@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>9.0.1</Version>
+    <Version>9.1.0</Version>
     <Authors>jmayer913</Authors>
     <Company>jmayer913</Company>
     <RepositoryUrl>https://github.com/jmayer913/JMayer-Example-ASPSyncfusionMVC</RepositoryUrl>
