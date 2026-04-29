@@ -51,7 +51,7 @@
     function onServiceTypeChange(args) {
         var otherTextBox = document.getElementById('OtherTypeOfService').ej2_instances[0];
 
-        if (args.itemData.Name === 'Other') {
+        if (args.itemData !== null && args.itemData.Name === 'Other') {
             otherTextBox.enabled = true;
         }
         else {
