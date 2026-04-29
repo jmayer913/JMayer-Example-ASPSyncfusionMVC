@@ -56,7 +56,7 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
     /// <param name="model">The model which contains the work order.</param>
     private static void ClearOtherTypeOfService(CRUDModel<WorkOrder> model)
     {
-        if (model.Value.ServiceType is not WorkOrderServiceType.Other)
+        if (model is not null && model.Value.ServiceType is not WorkOrderServiceType.Other)
         {
             model.Value.OtherTypeOfService = null;
         }

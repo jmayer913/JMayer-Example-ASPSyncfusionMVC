@@ -14,7 +14,7 @@ namespace JMayer.Example.ASPMVC.Controllers;
 /// <typeparam name="T">Must be a DataObject since the data layer requires this.</typeparam>
 /// <typeparam name="U">Must be an IStandardCRUDDataLayer so the controller can interact with the collection/table associated with it.</typeparam>
 public class SyncFusionModelViewController<T, U> : StandardModelViewController<T, U>
-    where T : DataObject
+    where T : DataObject, new()
     where U : IStandardCRUDDataLayer<T>
 {
     /// <inheritdoc/>
@@ -46,6 +46,14 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     {
         try
         {
+            //When the user submits without entering data, an empty
+            //model is sent so create one because the data layer expects
+            //a non-null object.
+            model ??= new CRUDModel<T>()
+            {
+                Value = new(),
+            };
+
             if (ModelState.IsValid is false)
             {
                 Logger.LogWarning("Failed to create the {Type} because of a model validation error.", DataObjectTypeName);
