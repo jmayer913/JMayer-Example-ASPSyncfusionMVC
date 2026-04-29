@@ -58,7 +58,7 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
     {
         if (model.Value.ServiceType is not WorkOrderServiceType.Other)
         {
-            model.Value.OtherTypeOfService = string.Empty;
+            model.Value.OtherTypeOfService = null;
         }
     }
 
