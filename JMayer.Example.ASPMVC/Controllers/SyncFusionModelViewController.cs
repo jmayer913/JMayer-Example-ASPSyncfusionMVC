@@ -14,7 +14,7 @@ namespace JMayer.Example.ASPMVC.Controllers;
 /// <typeparam name="T">Must be a DataObject since the data layer requires this.</typeparam>
 /// <typeparam name="U">Must be an IStandardCRUDDataLayer so the controller can interact with the collection/table associated with it.</typeparam>
 public class SyncFusionModelViewController<T, U> : StandardModelViewController<T, U>
-    where T : DataObject, new()
+    where T : DataObject
     where U : IStandardCRUDDataLayer<T>
 {
     /// <inheritdoc/>
