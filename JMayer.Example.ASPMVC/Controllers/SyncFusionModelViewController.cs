@@ -46,14 +46,6 @@ public class SyncFusionModelViewController<T, U> : StandardModelViewController<T
     {
         try
         {
-            //When the user submits without entering data, an empty
-            //model is sent so create one because the data layer expects
-            //a non-null object.
-            model ??= new CRUDModel<T>()
-            {
-                Value = new(),
-            };
-
             if (ModelState.IsValid is false)
             {
                 Logger.LogWarning("Failed to create the {Type} because of a model validation error.", DataObjectTypeName);
