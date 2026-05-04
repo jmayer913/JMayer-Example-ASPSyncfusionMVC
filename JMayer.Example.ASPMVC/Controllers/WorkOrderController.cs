@@ -2,6 +2,7 @@
 using JMayer.Example.ASPMVC.DataLayers;
 using JMayer.Example.ASPMVC.Models;
 using Microsoft.AspNetCore.Mvc;
+using Syncfusion.EJ2.Base;
 
 namespace JMayer.Example.ASPMVC.Controllers;
 
@@ -49,6 +50,28 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
         return await base.AddPartialViewAsync();
     }
 
+    /// <summary>
+    /// The method clears the other type of service if the service type is not other.
+    /// </summary>
+    /// <param name="model">The model which contains the work order.</param>
+    private static void ClearOtherTypeOfService(CRUDModel<WorkOrder> model)
+    {
+        if (model is not null && model.Value.ServiceType is not WorkOrderServiceType.Other)
+        {
+            model.Value.OtherTypeOfService = null;
+        }
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overriden to clear the OtherTypeOfService property if the ServiceType is not Other.
+    /// </remarks>
+    public override async Task<IActionResult> CreateAsync([FromBody] CRUDModel<WorkOrder> model)
+    {
+        ClearOtherTypeOfService(model);
+        return await base.CreateAsync(model);
+    }
+
     /// <inheritdoc/>
     /// <remarks>
     /// Overriden so the service types and priorities are added to the ViewBag.
@@ -62,5 +85,15 @@ public class WorkOrderController : SyncFusionModelViewController<WorkOrder, IWor
         ViewBag.Priorities = new List<ListView>(_priorities);
 
         return await base.EditPartialViewAsync(id);
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Overriden to clear the OtherTypeOfService property if the ServiceType is not Other.
+    /// </remarks>
+    public override async Task<IActionResult> UpdateAsync([FromBody] CRUDModel<WorkOrder> model)
+    {
+        ClearOtherTypeOfService(model);
+        return await base.UpdateAsync(model);
     }
 }

@@ -11,7 +11,7 @@
     </div>
     <div class="row my-3">
         <div class="col-md-6">
-            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" change="onServiceTypeChange" floatLabelType="Always" placeholder="Service Type" showClearButton="true">
+            <ejs-dropdownlist id="@nameof(WorkOrder.ServiceType)" dataSource="@ViewBag.ServiceTypes" change="onServiceTypeChange" floatLabelType="Always" placeholder="Service Type" showClearButton="false" value="@WorkOrderServiceType.Inspection">
                 <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
             </ejs-dropdownlist>
         </div>
@@ -21,7 +21,7 @@
     </div>
     <div class="row my-3">
         <div class="col-md-6">
-            <ejs-dropdownlist id="@nameof(WorkOrder.Priority)" dataSource="@ViewBag.Priorities" floatLabelType="Always" placeholder="Priority" showClearButton="true">
+            <ejs-dropdownlist id="@nameof(WorkOrder.Priority)" dataSource="@ViewBag.Priorities" floatLabelType="Always" placeholder="Priority" showClearButton="false" value="@WorkOrderPriority.Normal">
                 <e-dropdownlist-fields text="Name" value="Integer64ID"></e-dropdownlist-fields>
             </ejs-dropdownlist>
         </div>
@@ -36,7 +36,7 @@
     function onServiceTypeChange(args) {
         var otherTextBox = document.getElementById('OtherTypeOfService').ej2_instances[0];
         
-        if (args.itemData.Name === 'Other') {
+        if (args.itemData !== null && args.itemData.Name === 'Other') {
             otherTextBox.enabled = true;
         }
         else {

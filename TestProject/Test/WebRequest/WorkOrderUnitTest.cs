@@ -42,14 +42,14 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             },
         };
 
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         if (httpResponseMessage.IsSuccessStatusCode is false)
         {
             return null;
         }
 
-        WorkOrder? workOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>();
+        WorkOrder? workOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>(TestContext.Current.CancellationToken);
 
         return workOrder;
     }
@@ -62,11 +62,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
     public async Task VerifyAddPartialView()
     {
         HttpClient client = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/AddPartialView");
+        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/AddPartialView", TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode);
 
-        string html = await httpResponseMessage.Content.ReadAsStringAsync();
+        string html = await httpResponseMessage.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(html); //HTML must have been returned.
     }
@@ -110,11 +110,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         };
 
         HttpClient httpClient = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
-        WorkOrder? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>();
+        WorkOrder? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(returnedWorkOrder); //The data object must have been returned.
         Assert.True(new WorkOrderEqualityComparer(true, true, true).Equals(workOrder, returnedWorkOrder), "The data object sent should be the same as the data object returned."); //Original and return must be equal.
@@ -146,11 +146,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             Value = duplicateWorkOrder,
         };
 
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == nameof(WorkOrder.Name)); //There must be a Name key.
@@ -172,16 +172,46 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         };
 
         HttpClient httpClient = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.Name)}"); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"]); //Name must have a single error.
         Assert.Equal("The Name field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"][0]); //Confirm the correct error message.
+    }
+
+    /// <summary>
+    /// The method verifies the work order controller will return a validation problem when it receives a create request 
+    /// by the user and and the work order's service type is other and other type of service is empty.
+    /// </summary>
+    /// <returns>A Task for the async.</returns>
+    [Fact]
+    public async Task VerifyCreateWorkOrderOtherTypeOfServiceRequiredValidationFailure()
+    {
+        CRUDModel<WorkOrder> model = new()
+        {
+            Value = new WorkOrder()
+            {
+                Name = nameof(VerifyCreateWorkOrderOtherTypeOfServiceRequiredValidationFailure),
+                ServiceType = WorkOrderServiceType.Other,
+            },
+        };
+
+        HttpClient httpClient = _factory.CreateClient();
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
+
+        Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
+
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
+        Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.OtherTypeOfService)}"); //There must be a OtherTypeOfService key.
+        Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.OtherTypeOfService)}"]); //OtherTypeOfService must have a single error.
+        Assert.Equal("The OtherTypeOfService field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.OtherTypeOfService)}"][0]); //Confirm the correct error message.
     }
 
     /// <summary>
@@ -206,11 +236,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             Value = workOrder,
         };
 
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Delete", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Delete", model, TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
-        CRUDModel<WorkOrder>? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<CRUDModel<WorkOrder>>();
+        CRUDModel<WorkOrder>? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<CRUDModel<WorkOrder>>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(returnedWorkOrder); //The data object must have been returned.
         Assert.True(new WorkOrderEqualityComparer(true, true, true).Equals(workOrder, returnedWorkOrder.Value), "The data object sent should be the same as the data object returned."); //Original and return must be equal.
@@ -224,11 +254,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
     public async Task VerifyEditPartialView()
     {
         HttpClient client = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/EditPartialView/1");
+        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/EditPartialView/1", TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
-        string html = await httpResponseMessage.Content.ReadAsStringAsync();
+        string html = await httpResponseMessage.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(html); //HTML must have been returned.
     }
@@ -241,11 +271,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
     public async Task VerifyIndexView()
     {
         HttpClient client = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/Index");
+        HttpResponseMessage httpResponseMessage = await client.GetAsync("WorkOrder/Index", TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
-        string html = await httpResponseMessage.Content.ReadAsStringAsync();
+        string html = await httpResponseMessage.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(html); //HTML must have been returned.
     }
@@ -294,11 +324,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             Value = workOrder,
         };
 
-        HttpResponseMessage httpResponseMessage = await client.PostAsJsonAsync("WorkOrder/Update", model);
+        HttpResponseMessage httpResponseMessage = await client.PostAsJsonAsync("WorkOrder/Update", model, TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
-        WorkOrder? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>();
+        WorkOrder? returnedWorkOrder = await httpResponseMessage.Content.ReadFromJsonAsync<WorkOrder>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(returnedWorkOrder); //The data object must have been returned.
         Assert.True(new WorkOrderEqualityComparer(true, true, true).Equals(workOrder, returnedWorkOrder), "The data object sent should be the same as the data object returned."); //Original and return must be equal.
@@ -334,11 +364,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             Value = workOrder,
         };
 
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == nameof(WorkOrder.Name)); //There must be a Name key.
@@ -370,16 +400,52 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             KeyColumn = nameof(WorkOrder.Integer64ID),
             Value = workOrder,
         };
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Create", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
         Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.Name)}"); //There must be a Name key.
         Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"]); //Name must have a single error.
         Assert.Equal("The Name field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.Name)}"][0]); //Confirm the correct error message.
+    }
+
+    /// <summary>
+    /// The method verifies the work order controller will return a validation problem when it receives an update request 
+    /// by the user and and the work order's service type is other and other type of service is empty.
+    /// </summary>
+    /// <returns>A Task for the async.</returns>
+    [Fact]
+    public async Task VerifyUpdateWorkOrderOtherTypeOfServiceRequiredValidationFailure()
+    {
+        HttpClient httpClient = _factory.CreateClient();
+        WorkOrder? workOrder = await CreateWorkOrderAsync(httpClient, "Update Other Type of Service Required Test");
+
+        if (workOrder is null)
+        {
+            Assert.Fail("Failed to create a work order for the test.");
+        }
+
+        workOrder.ServiceType = WorkOrderServiceType.Other;
+
+        CRUDModel<WorkOrder> model = new()
+        {
+            Key = workOrder.Integer64ID,
+            KeyColumn = nameof(WorkOrder.Integer64ID),
+            Value = workOrder,
+        };
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model, TestContext.Current.CancellationToken);
+
+        Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
+
+        ValidationProblemDetails? validationProblemDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ValidationProblemDetails>(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(validationProblemDetails); //The model state dictionary must have been returned.
+        Assert.Contains(validationProblemDetails.Errors, obj => obj.Key == $"Value.{nameof(WorkOrder.OtherTypeOfService)}"); //There must be a OtherTypeOfService key.
+        Assert.Single(validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.OtherTypeOfService)}"]); //OtherTypeOfService must have a single error.
+        Assert.Equal("The OtherTypeOfService field is required.", validationProblemDetails.Errors[$"Value.{nameof(WorkOrder.OtherTypeOfService)}"][0]); //Confirm the correct error message.
     }
 
     /// <summary>
@@ -404,11 +470,11 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
         };
 
         HttpClient httpClient = _factory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        NotFoundDetails? notFoundDetails = await httpResponseMessage.Content.ReadFromJsonAsync<NotFoundDetails>();
+        NotFoundDetails? notFoundDetails = await httpResponseMessage.Content.ReadFromJsonAsync<NotFoundDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(notFoundDetails); //The conflict detail must have been returned.
         Assert.Equal("Work Order Update Error - Not Found", notFoundDetails.Title); //Confirm the correct title.
@@ -440,16 +506,16 @@ public class WorkOrderUnitTest : IClassFixture<WebApplicationFactory<Program>>
             KeyColumn = nameof(WorkOrder.Integer64ID),
             Value = workOrder,
         };
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model);
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model, TestContext.Current.CancellationToken);
 
         Assert.True(httpResponseMessage.IsSuccessStatusCode, "The operation should have been successful."); //The operation must have been successful.
 
         model.Value = conflictWorkOrder;
-        httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model);
+        httpResponseMessage = await httpClient.PostAsJsonAsync("WorkOrder/Update", model, TestContext.Current.CancellationToken);
 
         Assert.False(httpResponseMessage.IsSuccessStatusCode, "The operation should have failed."); //The operation must have failed.
 
-        ConflictDetails? conflictDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ConflictDetails>();
+        ConflictDetails? conflictDetails = await httpResponseMessage.Content.ReadFromJsonAsync<ConflictDetails>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(conflictDetails); //The conflict dynamic type must have been returned.
         Assert.Equal("Work Order Update Error - Data Conflict", conflictDetails.Title); //Confirm the correct title.
